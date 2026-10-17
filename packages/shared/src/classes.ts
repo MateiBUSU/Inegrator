@@ -37,6 +37,8 @@ export const teacherClassSchema = z.object({
   name: z.string(),
   grade: z.number().int(),
   join_code: z.string(),
+  // The teacher's own writing-style notes for AI generation. Never part of any student response.
+  style_notes: z.string().nullable(),
   created_at: z.string(),
 });
 export type TeacherClass = z.infer<typeof teacherClassSchema>;

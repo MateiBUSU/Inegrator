@@ -44,6 +44,7 @@ vi.mock("../repositories/class-repository", () => {
   class JoinCodeTakenError extends Error {}
   class UnknownUserError extends Error {}
   const withTeacher = (c: (typeof store.classes)[number]) => ({
+    styleNotes: null as string | null, // the real row always has the column
     ...c,
     teacher: { displayName: store.users.get(c.teacherId)?.displayName ?? "?" },
   });
@@ -325,6 +326,36 @@ describe("GET /api/classes/:id authorization", () => {
       "joined_at",
     ]);
     expect(res.body.class.students[0]).toMatchObject({ id: student.id, display_name: "Maria" });
+  });
+
+  it("shows the style notes to the owning teacher only, never to students", async () => {
+    const app = createApp();
+    const teacher = makeUser("teacher", "Prof");
+    const student = makeUser("student", "Maria");
+    const cls = await createClassAs(app, teacher);
+    await request(app)
+      .post("/api/classes/join")
+      .set("Cookie", student.cookie)
+      .send({ code: cls.join_code });
+
+    const before = await request(app).get(`/api/classes/${cls.id}`).set("Cookie", teacher.cookie);
+    expect(before.body.class.style_notes).toBeNull();
+
+    (store.classes[0] as { styleNotes?: string | null }).styleNotes =
+      "Ton prietenos, exemple scurte.";
+    const detail = await request(app).get(`/api/classes/${cls.id}`).set("Cookie", teacher.cookie);
+    const list = await request(app).get("/api/classes").set("Cookie", teacher.cookie);
+    expect(detail.body.class.style_notes).toBe("Ton prietenos, exemple scurte.");
+    expect(list.body.classes[0].style_notes).toBe("Ton prietenos, exemple scurte.");
+
+    const studentDetail = await request(app)
+      .get(`/api/classes/${cls.id}`)
+      .set("Cookie", student.cookie);
+    const studentList = await request(app).get("/api/classes").set("Cookie", student.cookie);
+    for (const body of [studentDetail.body, studentList.body]) {
+      expect(JSON.stringify(body)).not.toContain("Ton prietenos");
+      expect(JSON.stringify(body)).not.toContain("style_notes");
+    }
   });
 
   it("gives an enrolled student the class without the student list or join code", async () => {

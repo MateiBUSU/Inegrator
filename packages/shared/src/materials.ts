@@ -151,13 +151,24 @@ function refineDefinition(m: DefinitionShape, ctx: z.RefinementCtx): void {
   if (new Set(objectiveIds).size !== objectiveIds.length)
     add(["objectives"], "duplicate objective ids");
 
+  // Each problem points at the exact question (path ["questions", 2, "objectiveId"] and so on),
+  // so a client can say which one is wrong.
   const seen = new Set<string>();
-  for (const q of allQuestions(m)) {
-    if (seen.has(q.id)) add(["questions"], `duplicate question id: ${q.id}`);
-    seen.add(q.id);
-    if (!objectiveIds.includes(q.objectiveId)) {
-      add(["questions"], `objectiveId "${q.objectiveId}" is not in the material's objectives`);
-    }
+  const lists: [(string | number)[], { id: string; objectiveId: string }[]][] = [
+    [["lesson", "checkQuestions"], m.lesson?.checkQuestions ?? []],
+    [["questions"], m.questions ?? []],
+  ];
+  for (const [listPath, list] of lists) {
+    list.forEach((q, index) => {
+      if (seen.has(q.id)) add([...listPath, index, "id"], `duplicate question id: ${q.id}`);
+      seen.add(q.id);
+      if (!objectiveIds.includes(q.objectiveId)) {
+        add(
+          [...listPath, index, "objectiveId"],
+          `objectiveId "${q.objectiveId}" is not in the material's objectives`,
+        );
+      }
+    });
   }
 }
 

@@ -42,6 +42,7 @@ function toTeacherClass(c: ClassRecord): TeacherClass {
     name: c.name,
     grade: c.grade,
     join_code: c.joinCode,
+    style_notes: c.styleNotes,
     created_at: c.createdAt.toISOString(),
   };
 }

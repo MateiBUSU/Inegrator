@@ -8,7 +8,12 @@ import { LoginPage } from "./pages/login-page";
 import { NotFoundPage } from "./pages/not-found-page";
 import { RegisterPage } from "./pages/register-page";
 import { StudentClassesPage } from "./pages/student-classes-page";
+import { TeacherClassDetailPage } from "./pages/teacher-class-detail-page";
 import { TeacherClassesPage } from "./pages/teacher-classes-page";
+import { TeacherGeneratePage } from "./pages/teacher-generate-page";
+import { TeacherMaterialPage } from "./pages/teacher-material-page";
+import { TeacherMaterialsPage } from "./pages/teacher-materials-page";
+import { TeacherStudentProgressPage } from "./pages/teacher-student-progress-page";
 
 /** The route table. The router itself is provided by the caller (BrowserRouter / MemoryRouter). */
 export function App() {
@@ -24,18 +29,14 @@ export function App() {
         <Route element={<RequireAuth />}>
           <Route element={<RequireRole role="teacher" />}>
             <Route path="teacher/classes" element={<TeacherClassesPage />} />
+            <Route path="teacher/classes/:id" element={<TeacherClassDetailPage />} />
             <Route
-              path="teacher/classes/:id"
-              element={<ComingSoonPage title="Clasă" backTo="/teacher/classes" />}
+              path="teacher/classes/:id/students/:studentId"
+              element={<TeacherStudentProgressPage />}
             />
-            <Route
-              path="teacher/materials"
-              element={<ComingSoonPage title="Materiale" backTo="/teacher/classes" />}
-            />
-            <Route
-              path="teacher/materials/:id"
-              element={<ComingSoonPage title="Material" backTo="/teacher/materials" />}
-            />
+            <Route path="teacher/materials" element={<TeacherMaterialsPage />} />
+            <Route path="teacher/materials/new" element={<TeacherGeneratePage />} />
+            <Route path="teacher/materials/:id" element={<TeacherMaterialPage />} />
           </Route>
           <Route element={<RequireRole role="student" />}>
             <Route path="student/classes" element={<StudentClassesPage />} />

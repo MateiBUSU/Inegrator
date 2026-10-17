@@ -32,6 +32,7 @@ const teacherClass = (over: Partial<TeacherClass> = {}): TeacherClass => ({
   name: "9A",
   grade: 9,
   join_code: "ABC234",
+  style_notes: null,
   created_at: "2026-10-17T10:00:00.000Z",
   ...over,
 });
