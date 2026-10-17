@@ -2,6 +2,7 @@ export * from "./ai";
 export * from "./auth";
 export * from "./classes";
 export * from "./documents";
+export * from "./gamification";
 export * from "./health";
 export * from "./materials";
 export * from "./policy";

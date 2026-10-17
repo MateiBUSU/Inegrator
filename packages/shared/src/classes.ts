@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { gamificationStatsSchema } from "./gamification";
 
 export const createClassRequestSchema = z.object({
   // No control characters: Postgres rejects NUL bytes in text, which would surface as a 500.
@@ -73,6 +74,8 @@ export const studentClassResponseSchema = z.object({ class: studentClassSchema }
 
 export const studentProgressResponseSchema = z.object({
   student: z.object({ id: z.uuid(), display_name: z.string() }),
+  // This one student's own stats, not a class-wide aggregate.
+  gamification: gamificationStatsSchema,
   lesson_progress: z.array(
     z.object({
       material_id: z.uuid(),

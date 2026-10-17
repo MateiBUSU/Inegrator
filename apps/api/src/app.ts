@@ -9,6 +9,7 @@ import { createClassesRouter } from "./routes/classes-routes";
 import { createClassDocumentsRouter, createDocumentsRouter } from "./routes/documents-routes";
 import { healthRouter } from "./routes/health-routes";
 import { createMaterialsRouter, createSubjectsRouter } from "./routes/materials-routes";
+import { createMeRouter } from "./routes/me-routes";
 
 export function createApp() {
   const app = express();
@@ -33,6 +34,7 @@ export function createApp() {
   app.use("/api/documents", createDocumentsRouter());
   app.use("/api/subjects", createSubjectsRouter());
   app.use("/api/materials", createMaterialsRouter());
+  app.use("/api/me", createMeRouter());
 
   app.use(notFoundHandler);
   app.use(errorHandler);

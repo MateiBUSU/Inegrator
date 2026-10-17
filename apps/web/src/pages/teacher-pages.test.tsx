@@ -129,6 +129,14 @@ describe("class detail page", () => {
 describe("student progress page", () => {
   const progress = (over: Partial<StudentProgressResponse> = {}): StudentProgressResponse => ({
     student: { id: STUDENT.id, display_name: "Maria" },
+    gamification: {
+      currentStreakDays: 0,
+      weeklyActivityCount: 0,
+      weeklyGoal: 6,
+      pointsTotal: 0,
+      level: "Începător",
+      nextLevelAt: 150,
+    },
     lesson_progress: [],
     quiz_attempts: [],
     ...over,

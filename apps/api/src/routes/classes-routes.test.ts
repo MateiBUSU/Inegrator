@@ -32,6 +32,7 @@ const store = vi.hoisted(() => ({
     maxScore: number;
     submittedAt: Date;
   }[],
+  correctAnswers: new Map<string, number>(),
   forcedCodes: [] as string[],
 }));
 
@@ -109,6 +110,17 @@ vi.mock("../repositories/progress-repository", () => ({
     store.attempts.filter((a) => a.classId === classId && a.studentId === studentId),
 }));
 
+// Gamification reads a student's whole activity; here it is derived from the same fake store.
+vi.mock("../repositories/gamification-repository", () => ({
+  loadActivityFacts: async (studentId: string) => ({
+    attemptDates: store.attempts.filter((a) => a.studentId === studentId).map((a) => a.submittedAt),
+    lessons: store.lessons
+      .filter((l) => l.studentId === studentId)
+      .map((l) => ({ status: l.status, updatedAt: l.updatedAt })),
+    answers: { correct: store.correctAnswers.get(studentId) ?? 0, incorrect: 0 },
+  }),
+}));
+
 interface TestUser {
   id: string;
   cookie: string;
@@ -133,6 +145,7 @@ const NOT_FOUND = { error: { code: "CLASS_NOT_FOUND", message: expect.any(String
 
 beforeEach(() => {
   store.users.clear();
+  store.correctAnswers.clear();
   store.classes.length = 0;
   store.enrollments.length = 0;
   store.lessons.length = 0;
@@ -579,9 +592,54 @@ describe("GET /api/classes/:id/students/:studentId/progress", () => {
     expect(res.status).toBe(200);
     expect(res.body).toEqual({
       student: { id: student.id, display_name: "Maria" },
+      gamification: {
+        currentStreakDays: 0,
+        weeklyActivityCount: 0,
+        weeklyGoal: 6,
+        pointsTotal: 0,
+        level: "Începător",
+        nextLevelAt: 150,
+      },
       lesson_progress: [],
       quiz_attempts: [],
     });
+  });
+
+  it("includes that one student's own gamification stats, derived from real activity", async () => {
+    const { app, teacher, student, cls } = await setup();
+    const classmate = makeUser("student", "Ion");
+    await request(app)
+      .post("/api/classes/join")
+      .set("Cookie", classmate.cookie)
+      .send({ code: cls.join_code });
+    store.attempts.push({
+      id: crypto.randomUUID(),
+      classId: cls.id,
+      studentId: student.id,
+      materialId: crypto.randomUUID(),
+      score: 8,
+      maxScore: 10,
+      submittedAt: new Date(),
+    });
+    store.correctAnswers.set(student.id, 8);
+    store.correctAnswers.set(classmate.id, 100); // must never leak into Maria's numbers
+
+    const res = await request(app).get(url(cls.id, student.id)).set("Cookie", teacher.cookie);
+    expect(res.status).toBe(200);
+    expect(res.body.gamification).toMatchObject({
+      currentStreakDays: 1,
+      pointsTotal: 80,
+      level: "Începător",
+      nextLevelAt: 150,
+    });
+    expect(res.body.gamification.weeklyActivityCount).toBeGreaterThanOrEqual(1);
+    // Per student only: nothing class-wide (no averages, no list of other students).
+    expect(Object.keys(res.body).sort()).toEqual([
+      "gamification",
+      "lesson_progress",
+      "quiz_attempts",
+      "student",
+    ]);
   });
 
   it("returns lesson progress and quiz attempts for that class only", async () => {

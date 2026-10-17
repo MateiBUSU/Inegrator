@@ -20,6 +20,7 @@ import {
   type ClassRecord,
 } from "../repositories/class-repository";
 import { listLessonProgress, listQuizAttempts } from "../repositories/progress-repository";
+import { computeGamificationStats } from "./gamification";
 import { generateJoinCode } from "./join-code";
 import type { AuthContext } from "./token-service";
 
@@ -150,12 +151,14 @@ export async function getStudentProgress(
   const student = await findEnrolledStudent(owned.id, studentId);
   if (!student) throw new HttpError(404, "STUDENT_NOT_FOUND", "Elevul nu face parte din clasă.");
 
-  const [lessons, attempts] = await Promise.all([
+  const [lessons, attempts, gamification] = await Promise.all([
     listLessonProgress(owned.id, student.id),
     listQuizAttempts(owned.id, student.id),
+    computeGamificationStats(student.id),
   ]);
   return {
     student: { id: student.id, display_name: student.displayName },
+    gamification,
     lesson_progress: lessons.map((l) => ({
       material_id: l.materialId,
       status: l.status,
