@@ -12,16 +12,35 @@ export class HttpError extends Error {
   }
 }
 
+// Errors raised by express.json(): a 4xx status plus a `type` such as entity.too.large,
+// entity.parse.failed, encoding.unsupported or charset.unsupported.
 function isBodyParserError(err: unknown): err is { status: number; type: string } {
   return (
     typeof err === "object" &&
     err !== null &&
     "type" in err &&
     typeof err.type === "string" &&
-    err.type.startsWith("entity.") &&
     "status" in err &&
-    typeof err.status === "number"
+    typeof err.status === "number" &&
+    err.status >= 400 &&
+    err.status < 500
   );
+}
+
+function bodyParserResponse(err: { status: number; type: string }) {
+  if (err.type === "entity.too.large") {
+    return { code: "PAYLOAD_TOO_LARGE", message: "Cererea este prea mare." };
+  }
+  if (err.type === "entity.parse.failed") {
+    return { code: "INVALID_BODY", message: "Corpul cererii nu este JSON valid." };
+  }
+  if (err.status === 415) {
+    return {
+      code: "UNSUPPORTED_MEDIA_TYPE",
+      message: "Tipul sau codificarea cererii nu este acceptată.",
+    };
+  }
+  return { code: "BAD_REQUEST", message: "Cerere invalidă." };
 }
 
 export const notFoundHandler: RequestHandler = (_req, _res, next) => {
@@ -42,13 +61,7 @@ export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
   }
   // Malformed or oversized JSON bodies, raised by express.json().
   if (isBodyParserError(err)) {
-    const tooLarge = err.type === "entity.too.large";
-    res.status(err.status).json({
-      error: {
-        code: tooLarge ? "PAYLOAD_TOO_LARGE" : "INVALID_BODY",
-        message: tooLarge ? "Cererea este prea mare." : "Corpul cererii nu este JSON valid.",
-      },
-    });
+    res.status(err.status).json({ error: bodyParserResponse(err) });
     return;
   }
   console.error(err);

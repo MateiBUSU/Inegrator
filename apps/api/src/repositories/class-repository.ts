@@ -72,6 +72,19 @@ export function listClassesByStudent(studentId: string): Promise<ClassRecord[]> 
   });
 }
 
+/** Owner-scoped write; false if the class does not exist or is not this teacher's. */
+export async function setStyleNotes(
+  classId: string,
+  teacherId: string,
+  styleNotes: string | null,
+): Promise<boolean> {
+  const result = await prisma.class.updateMany({
+    where: { id: classId, teacherId },
+    data: { styleNotes },
+  });
+  return result.count === 1;
+}
+
 export async function isEnrolled(classId: string, studentId: string): Promise<boolean> {
   const row = await prisma.enrollment.findUnique({
     where: { classId_studentId: { classId, studentId } },

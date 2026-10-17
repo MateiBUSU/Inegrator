@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { safeText } from "./safe-text";
 
 export const sectionSchema = z.enum(["programa", "bac"]);
 export const languageSchema = z.enum(["cpp", "python"]);
@@ -13,24 +14,7 @@ export const verificationSchema = z.enum([
 ]);
 export type Verification = z.infer<typeof verificationSchema>;
 
-// A lone UTF-16 surrogate makes encodeURIComponent throw.
-function isWellFormed(value: string): boolean {
-  try {
-    encodeURIComponent(value);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-// Postgres jsonb cannot store \u0000 or lone surrogate escapes, which would surface as a 500:
-// reject both up front.
-const text = (max: number) =>
-  z
-    .string()
-    .max(max)
-    .refine((value) => !value.includes("\u0000"), "NUL character not allowed")
-    .refine(isWellFormed, "invalid unicode (lone surrogate)");
+const text = safeText;
 
 const idSchema = z.string().regex(/^[A-Za-z0-9_.-]{1,64}$/, "invalid id");
 
