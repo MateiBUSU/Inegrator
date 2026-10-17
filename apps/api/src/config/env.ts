@@ -4,6 +4,12 @@ const envSchema = z.object({
   PORT: z.coerce.number().int().min(1).max(65535).default(3001),
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   CORS_ORIGIN: z.string().url().default("http://localhost:5173"),
+  DATABASE_URL: z
+    .string()
+    .url()
+    .refine((value) => /^postgres(ql)?:\/\//.test(value), {
+      message: "must be a postgres:// or postgresql:// URL",
+    }),
 });
 
 export type Env = z.infer<typeof envSchema>;

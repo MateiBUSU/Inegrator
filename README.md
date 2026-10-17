@@ -19,6 +19,16 @@ cp apps/api/.env.example apps/api/.env
 npm run dev        # web on http://localhost:5173, api on http://localhost:3001
 ```
 
+## Database
+
+Needs a local PostgreSQL database; set `DATABASE_URL` in `apps/api/.env` (the database must already exist).
+
+```bash
+npm run db:migrate -w @app/api   # apply migrations (prisma migrate dev)
+npm run db:seed -w @app/api      # idempotent, provisional curriculum
+npm run db:check -w @app/api     # row counts
+```
+
 ## Checks
 
 ```bash

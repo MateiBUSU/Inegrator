@@ -1,0 +1,150 @@
+{
+  "subjects": [
+    {
+      "slug": "bac-cpp",
+      "title": "Bacalaureat – Informatică C++",
+      "section": "bac",
+      "language": "cpp",
+      "grade": null,
+      "chapters": [
+        {
+          "position": 1,
+          "title": "Subprograme",
+          "objectives": [
+            {
+              "code": "BAC-CPP-1.1",
+              "text": "Definește și apelează funcții cu parametri transmiși prin valoare și prin referință."
+            },
+            { "code": "BAC-CPP-1.2", "text": "Urmărește execuția unui subprogram recursiv simplu." }
+          ]
+        },
+        {
+          "position": 2,
+          "title": "Tablouri și șiruri de caractere",
+          "objectives": [
+            {
+              "code": "BAC-CPP-2.1",
+              "text": "Prelucrează tablouri unidimensionale și bidimensionale."
+            },
+            {
+              "code": "BAC-CPP-2.2",
+              "text": "Utilizează funcții standard pentru șiruri de caractere."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "programa-cpp-9",
+      "title": "Informatică C++ – clasa a IX-a",
+      "section": "programa",
+      "language": "cpp",
+      "grade": 9,
+      "chapters": [
+        {
+          "position": 1,
+          "title": "Elemente de bază ale limbajului",
+          "objectives": [
+            {
+              "code": "CPP9-1.1",
+              "text": "Declară variabile și folosește tipurile de date fundamentale."
+            },
+            { "code": "CPP9-1.2", "text": "Citește și afișează date folosind cin și cout." }
+          ]
+        },
+        {
+          "position": 2,
+          "title": "Structuri de control",
+          "objectives": [
+            { "code": "CPP9-2.1", "text": "Scrie instrucțiuni de decizie if și switch." },
+            { "code": "CPP9-2.2", "text": "Scrie instrucțiuni repetitive for, while și do-while." }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "programa-cpp-10",
+      "title": "Informatică C++ – clasa a X-a",
+      "section": "programa",
+      "language": "cpp",
+      "grade": 10,
+      "chapters": [
+        {
+          "position": 1,
+          "title": "Tablouri unidimensionale",
+          "objectives": [
+            {
+              "code": "CPP10-1.1",
+              "text": "Parcurge un tablou și calculează sume, minime și maxime."
+            },
+            { "code": "CPP10-1.2", "text": "Caută un element într-un tablou." }
+          ]
+        },
+        {
+          "position": 2,
+          "title": "Subprograme",
+          "objectives": [
+            { "code": "CPP10-2.1", "text": "Definește funcții cu și fără valoare returnată." },
+            { "code": "CPP10-2.2", "text": "Face diferența între variabile locale și globale." }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "programa-python-9",
+      "title": "Informatică Python – clasa a IX-a",
+      "section": "programa",
+      "language": "python",
+      "grade": 9,
+      "chapters": [
+        {
+          "position": 1,
+          "title": "Elemente de bază ale limbajului",
+          "objectives": [
+            {
+              "code": "PY9-1.1",
+              "text": "Folosește variabile și tipurile int, float, str și bool."
+            },
+            { "code": "PY9-1.2", "text": "Citește date cu input și le afișează cu print." }
+          ]
+        },
+        {
+          "position": 2,
+          "title": "Structuri de control",
+          "objectives": [
+            { "code": "PY9-2.1", "text": "Scrie instrucțiuni condiționale if, elif și else." },
+            { "code": "PY9-2.2", "text": "Scrie bucle for și while." }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "programa-python-10",
+      "title": "Informatică Python – clasa a X-a",
+      "section": "programa",
+      "language": "python",
+      "grade": 10,
+      "chapters": [
+        {
+          "position": 1,
+          "title": "Liste",
+          "objectives": [
+            {
+              "code": "PY10-1.1",
+              "text": "Creează și parcurge liste, folosind indexarea și feliile."
+            },
+            { "code": "PY10-1.2", "text": "Folosește metodele append, remove și sort." }
+          ]
+        },
+        {
+          "position": 2,
+          "title": "Funcții",
+          "objectives": [
+            { "code": "PY10-2.1", "text": "Definește funcții cu parametri și valoare returnată." },
+            { "code": "PY10-2.2", "text": "Înțelege domeniul de vizibilitate al variabilelor." }
+          ]
+        }
+      ]
+    }
+  ]
+}

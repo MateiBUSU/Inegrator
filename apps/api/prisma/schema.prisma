@@ -1,0 +1,415 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  student
+  teacher
+
+  @@map("role")
+}
+
+enum Section {
+  programa
+  bac
+
+  @@map("section")
+}
+
+enum Language {
+  cpp
+  python
+
+  @@map("language")
+}
+
+enum MaterialScope {
+  class
+  personal
+
+  @@map("material_scope")
+}
+
+enum MaterialKind {
+  lesson
+  test
+  problem
+  exercise
+
+  @@map("material_kind")
+}
+
+enum MaterialStatus {
+  draft
+  published
+  archived
+
+  @@map("material_status")
+}
+
+enum MaterialSource {
+  manual
+  ai
+  document_based
+
+  @@map("material_source")
+}
+
+enum ProgressStatus {
+  started
+  completed
+
+  @@map("progress_status")
+}
+
+enum RecommendationStatus {
+  open
+  done
+  dismissed
+
+  @@map("recommendation_status")
+}
+
+enum DocumentSourceType {
+  pasted
+  uploaded
+
+  @@map("document_source_type")
+}
+
+enum TutorRole {
+  user
+  tutor
+
+  @@map("tutor_role")
+}
+
+model User {
+  id           String   @id @default(uuid()) @db.Uuid
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  role         Role
+  displayName  String   @map("display_name")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  classesTaught   Class[]           @relation("ClassTeacher")
+  enrollments     Enrollment[]
+  learningTopics  LearningTopic[]
+  documents       TeacherDocument[]
+  materials       Material[]
+  quizAttempts    QuizAttempt[]
+  lessonProgress  LessonProgress[]
+  objectiveStats  ObjectiveStat[]
+  studentPolicies StudentPolicy[]
+  recommendations Recommendation[]
+  tutorMessages   TutorMessage[]
+  aiUsage         AiUsage[]
+
+  @@map("users")
+}
+
+model Class {
+  id         String   @id @default(uuid()) @db.Uuid
+  teacherId  String   @map("teacher_id") @db.Uuid
+  name       String
+  grade      Int
+  joinCode   String   @unique @map("join_code")
+  styleNotes String?  @map("style_notes")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  teacher     User                 @relation("ClassTeacher", fields: [teacherId], references: [id])
+  enrollments Enrollment[]
+  documents   TeacherDocument[]
+  assignments MaterialAssignment[]
+
+  @@index([teacherId])
+  @@map("classes")
+}
+
+model Enrollment {
+  classId   String   @map("class_id") @db.Uuid
+  studentId String   @map("student_id") @db.Uuid
+  joinedAt  DateTime @default(now()) @map("joined_at") @db.Timestamptz(6)
+
+  class   Class @relation(fields: [classId], references: [id], onDelete: Cascade)
+  student User  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@id([classId, studentId])
+  @@index([studentId])
+  @@map("enrollments")
+}
+
+model Subject {
+  id       String   @id @default(uuid()) @db.Uuid
+  slug     String   @unique
+  title    String
+  section  Section
+  language Language
+  grade    Int?
+
+  chapters  Chapter[]
+  materials Material[]
+
+  @@map("subjects")
+}
+
+model Chapter {
+  id        String @id @default(uuid()) @db.Uuid
+  subjectId String @map("subject_id") @db.Uuid
+  title     String
+  position  Int
+
+  subject    Subject     @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  objectives Objective[]
+  materials  Material[]
+
+  @@unique([subjectId, position])
+  @@index([subjectId])
+  @@map("chapters")
+}
+
+model LearningTopic {
+  id        String   @id @default(uuid()) @db.Uuid
+  studentId String   @map("student_id") @db.Uuid
+  title     String
+  goal      String
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  student         User            @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  objectives      Objective[]
+  materials       Material[]
+  studentPolicies StudentPolicy[]
+  tutorMessages   TutorMessage[]
+
+  @@index([studentId])
+  @@map("learning_topics")
+}
+
+// Exactly one of chapter_id / topic_id is set (CHECK in the migration).
+// Uniqueness of (chapter_id, code) and (topic_id, code) is enforced by partial
+// unique indexes in the migration SQL, since Prisma cannot express them.
+model Objective {
+  id        String   @id @default(uuid()) @db.Uuid
+  chapterId String?  @map("chapter_id") @db.Uuid
+  topicId   String?  @map("topic_id") @db.Uuid
+  code      String
+  text      String
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  chapter         Chapter?         @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  topic           LearningTopic?   @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  attemptAnswers  AttemptAnswer[]
+  objectiveStats  ObjectiveStat[]
+  recommendations Recommendation[]
+
+  @@index([chapterId])
+  @@index([topicId])
+  @@map("objectives")
+}
+
+model TeacherDocument {
+  id         String             @id @default(uuid()) @db.Uuid
+  classId    String             @map("class_id") @db.Uuid
+  teacherId  String             @map("teacher_id") @db.Uuid
+  title      String
+  sourceType DocumentSourceType @default(pasted) @map("source_type")
+  mime       String?
+  createdAt  DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  class   Class           @relation(fields: [classId], references: [id], onDelete: Cascade)
+  teacher User            @relation(fields: [teacherId], references: [id])
+  chunks  DocumentChunk[]
+
+  @@index([classId])
+  @@map("teacher_documents")
+}
+
+model DocumentChunk {
+  id         String @id @default(uuid()) @db.Uuid
+  documentId String @map("document_id") @db.Uuid
+  position   Int
+  text       String
+
+  document TeacherDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@unique([documentId, position])
+  @@index([documentId])
+  @@map("document_chunks")
+}
+
+model Material {
+  id                 String         @id @default(uuid()) @db.Uuid
+  ownerId            String         @map("owner_id") @db.Uuid
+  scope              MaterialScope
+  kind               MaterialKind
+  title              String
+  status             MaterialStatus @default(draft)
+  source             MaterialSource
+  subjectId          String?        @map("subject_id") @db.Uuid
+  chapterId          String?        @map("chapter_id") @db.Uuid
+  topicId            String?        @map("topic_id") @db.Uuid
+  content            Json
+  version            Int            @default(1)
+  parentId           String?        @map("parent_id") @db.Uuid
+  basedOnDocumentIds String[]       @default([]) @map("based_on_document_ids") @db.Uuid
+  createdAt          DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  publishedAt        DateTime?      @map("published_at") @db.Timestamptz(6)
+
+  owner           User                 @relation(fields: [ownerId], references: [id])
+  subject         Subject?             @relation(fields: [subjectId], references: [id])
+  chapter         Chapter?             @relation(fields: [chapterId], references: [id])
+  topic           LearningTopic?       @relation(fields: [topicId], references: [id])
+  parent          Material?            @relation("MaterialVersions", fields: [parentId], references: [id])
+  children        Material[]           @relation("MaterialVersions")
+  assignments     MaterialAssignment[]
+  quizAttempts    QuizAttempt[]
+  lessonProgress  LessonProgress[]
+  recommendations Recommendation[]
+
+  @@index([ownerId, status])
+  @@index([topicId])
+  @@map("materials")
+}
+
+model MaterialAssignment {
+  materialId String   @map("material_id") @db.Uuid
+  classId    String   @map("class_id") @db.Uuid
+  assignedAt DateTime @default(now()) @map("assigned_at") @db.Timestamptz(6)
+
+  material Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
+  class    Class    @relation(fields: [classId], references: [id], onDelete: Cascade)
+
+  @@id([materialId, classId])
+  @@index([classId])
+  @@map("material_assignments")
+}
+
+model QuizAttempt {
+  id          String   @id @default(uuid()) @db.Uuid
+  studentId   String   @map("student_id") @db.Uuid
+  materialId  String   @map("material_id") @db.Uuid
+  submittedAt DateTime @default(now()) @map("submitted_at") @db.Timestamptz(6)
+  score       Int
+  maxScore    Int      @map("max_score")
+
+  student  User            @relation(fields: [studentId], references: [id])
+  material Material        @relation(fields: [materialId], references: [id])
+  answers  AttemptAnswer[]
+
+  @@index([studentId, materialId])
+  @@map("quiz_attempts")
+}
+
+model AttemptAnswer {
+  id          String  @id @default(uuid()) @db.Uuid
+  attemptId   String  @map("attempt_id") @db.Uuid
+  questionId  String  @map("question_id")
+  answer      Json
+  isCorrect   Boolean @map("is_correct")
+  objectiveId String? @map("objective_id") @db.Uuid
+
+  attempt   QuizAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  objective Objective?  @relation(fields: [objectiveId], references: [id])
+
+  @@unique([attemptId, questionId])
+  @@map("attempt_answers")
+}
+
+model LessonProgress {
+  studentId  String         @map("student_id") @db.Uuid
+  materialId String         @map("material_id") @db.Uuid
+  status     ProgressStatus
+  updatedAt  DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  student  User     @relation(fields: [studentId], references: [id])
+  material Material @relation(fields: [materialId], references: [id])
+
+  @@id([studentId, materialId])
+  @@map("lesson_progress")
+}
+
+model ObjectiveStat {
+  studentId       String    @map("student_id") @db.Uuid
+  objectiveId     String    @map("objective_id") @db.Uuid
+  attempts        Int       @default(0)
+  correct         Int       @default(0)
+  hintsUsed       Int       @default(0) @map("hints_used")
+  lastPracticedAt DateTime? @map("last_practiced_at") @db.Timestamptz(6)
+  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  student   User      @relation(fields: [studentId], references: [id])
+  objective Objective @relation(fields: [objectiveId], references: [id], onDelete: Cascade)
+
+  @@id([studentId, objectiveId])
+  @@index([studentId])
+  @@map("objective_stats")
+}
+
+model StudentPolicy {
+  id               String   @id @default(uuid()) @db.Uuid
+  studentId        String   @map("student_id") @db.Uuid
+  topicId          String?  @map("topic_id") @db.Uuid
+  version          Int      @default(1)
+  explanationLevel String   @map("explanation_level") // basic | standard | advanced
+  exampleFirst     Boolean  @map("example_first")
+  scaffolding      String // low | medium | high
+  hintsEnabled     Boolean  @map("hints_enabled")
+  reasonCode       String?  @map("reason_code")
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  student User           @relation(fields: [studentId], references: [id])
+  topic   LearningTopic? @relation(fields: [topicId], references: [id])
+
+  @@unique([studentId, topicId, version])
+  @@index([studentId, topicId])
+  @@map("student_policies")
+}
+
+model Recommendation {
+  id          String               @id @default(uuid()) @db.Uuid
+  studentId   String               @map("student_id") @db.Uuid
+  objectiveId String               @map("objective_id") @db.Uuid
+  materialId  String?              @map("material_id") @db.Uuid
+  ruleCode    String               @map("rule_code")
+  reason      String
+  status      RecommendationStatus @default(open)
+  createdAt   DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  student   User      @relation(fields: [studentId], references: [id])
+  objective Objective @relation(fields: [objectiveId], references: [id])
+  material  Material? @relation(fields: [materialId], references: [id])
+
+  @@map("recommendations")
+}
+
+model TutorMessage {
+  id        String    @id @default(uuid()) @db.Uuid
+  studentId String    @map("student_id") @db.Uuid
+  topicId   String    @map("topic_id") @db.Uuid
+  role      TutorRole
+  content   String
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  student User          @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  topic   LearningTopic @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  @@index([studentId, topicId, createdAt])
+  @@map("tutor_messages")
+}
+
+model AiUsage {
+  userId String   @map("user_id") @db.Uuid
+  day    DateTime @db.Date
+  count  Int      @default(0)
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@id([userId, day])
+  @@map("ai_usage")
+}

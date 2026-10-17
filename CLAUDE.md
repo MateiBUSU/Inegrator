@@ -8,7 +8,7 @@ Two separate sections: `programa` (C++ and Python) and `bac` (C++ only).
 
 ## Stack (do not change without a serious technical reason)
 - npm workspaces monorepo: `apps/web` (React + Vite + TS), `apps/api` (Node + Express + TS), `packages/shared` (types + zod schemas).
-- PostgreSQL on Neon, accessed through Prisma, versioned migrations.
+- PostgreSQL (local for development, hosting for deployment decided later), accessed through Prisma, versioned migrations.
 - AI: Gemini behind a `ContentGenerator` interface. A `MockGenerator` implementation also exists.
 - Do NOT use Next.js. Do NOT execute code submitted by students.
 
