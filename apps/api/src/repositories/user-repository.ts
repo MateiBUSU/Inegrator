@@ -1,4 +1,5 @@
 import type { Role, User } from "../generated/prisma/client";
+import { isUniqueViolation } from "./prisma-errors";
 import { prisma } from "./prisma-client";
 
 export type UserRecord = User;
@@ -28,10 +29,8 @@ export async function createUser(data: NewUser): Promise<UserRecord> {
   try {
     return await prisma.user.create({ data });
   } catch (err) {
-    // P2002 = unique constraint violation (users.email)
-    if (typeof err === "object" && err !== null && "code" in err && err.code === "P2002") {
-      throw new DuplicateEmailError();
-    }
+    // users.email is the only unique column besides the id
+    if (isUniqueViolation(err)) throw new DuplicateEmailError();
     throw err;
   }
 }

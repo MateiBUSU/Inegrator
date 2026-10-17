@@ -39,6 +39,12 @@ export const requireAuth: RequestHandler = (req, _res, next) => {
   next();
 };
 
+/** Identity of the caller, taken from the verified session only. Use after requireAuth. */
+export function getAuth(req: { auth?: AuthContext }): AuthContext {
+  if (!req.auth) throw new HttpError(401, "UNAUTHENTICATED", "Autentificare necesară.");
+  return req.auth;
+}
+
 /** Must run after requireAuth. */
 export function requireRole(...roles: Role[]): RequestHandler {
   return (req, _res, next) => {

@@ -5,6 +5,7 @@ import helmet from "helmet";
 import { env } from "./config/env";
 import { errorHandler, notFoundHandler } from "./middleware/error-handler";
 import { createAuthRouter } from "./routes/auth-routes";
+import { createClassesRouter } from "./routes/classes-routes";
 import { healthRouter } from "./routes/health-routes";
 
 export function createApp() {
@@ -19,6 +20,7 @@ export function createApp() {
 
   app.use("/api/health", healthRouter);
   app.use("/api/auth", createAuthRouter());
+  app.use("/api/classes", createClassesRouter());
 
   app.use(notFoundHandler);
   app.use(errorHandler);

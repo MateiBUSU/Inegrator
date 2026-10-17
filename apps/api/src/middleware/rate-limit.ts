@@ -1,11 +1,17 @@
-import type { RequestHandler } from "express";
-import { rateLimit } from "express-rate-limit";
+import type { Request, RequestHandler } from "express";
+import { ipKeyGenerator, rateLimit } from "express-rate-limit";
 import { HttpError } from "./error-handler";
 
-function limiter(options: { windowMs: number; limit: number; skipSuccessful?: boolean }) {
+function limiter(options: {
+  windowMs: number;
+  limit: number;
+  skipSuccessful?: boolean;
+  keyGenerator?: (req: Request) => string;
+}) {
   return rateLimit({
     windowMs: options.windowMs,
     limit: options.limit,
+    ...(options.keyGenerator ? { keyGenerator: options.keyGenerator } : {}),
     skipSuccessfulRequests: options.skipSuccessful ?? false,
     standardHeaders: "draft-8",
     legacyHeaders: false,
@@ -14,6 +20,20 @@ function limiter(options: { windowMs: number; limit: number; skipSuccessful?: bo
         new HttpError(429, "RATE_LIMITED", "Prea multe încercări. Încearcă din nou mai târziu."),
       );
     },
+  });
+}
+
+/**
+ * Slows down join-code guessing. Only failed attempts count. Keyed per signed-in user rather
+ * than per IP, so one student's typos cannot lock out a class behind the same school NAT or
+ * proxy. Must run after requireAuth; anonymous callers fall back to their IP.
+ */
+export function createJoinRateLimiter(): RequestHandler {
+  return limiter({
+    windowMs: 15 * 60 * 1000,
+    limit: 20,
+    skipSuccessful: true,
+    keyGenerator: (req) => req.auth?.userId ?? ipKeyGenerator(req.ip ?? "unknown"),
   });
 }
 
