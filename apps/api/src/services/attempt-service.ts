@@ -83,23 +83,17 @@ export async function submitAttempt(
   ];
   const catalogue = await findExistingObjectiveIds(candidateIds);
 
-  // Programming answers are not persisted: they have no correct/incorrect verdict to store, and
-  // a fake "incorrect" would corrupt future per-objective mastery.
-  const rows = scored.results.flatMap((result) =>
-    result.type === "programming"
-      ? []
-      : [
-          {
-            questionId: result.questionId,
-            answer:
-              result.type === "mcq"
-                ? { optionIds: result.selected }
-                : { text: byQuestion.get(result.questionId)?.text ?? "" },
-            isCorrect: result.isCorrect,
-            objectiveId: catalogue.has(result.objectiveId) ? result.objectiveId : null,
-          },
-        ],
-  );
+  // Programming answers are stored with isCorrect = null ("not graded"): a fake "incorrect" would
+  // corrupt future per-objective mastery.
+  const rows = scored.results.map((result) => ({
+    questionId: result.questionId,
+    answer:
+      result.type === "mcq"
+        ? { optionIds: result.selected }
+        : { text: byQuestion.get(result.questionId)?.text ?? "" },
+    isCorrect: result.type === "programming" ? null : result.isCorrect,
+    objectiveId: catalogue.has(result.objectiveId) ? result.objectiveId : null,
+  }));
 
   const attempt = await createAttempt({
     studentId: auth.userId,

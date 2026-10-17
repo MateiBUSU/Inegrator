@@ -59,6 +59,8 @@ export const questionResultSchema = z.discriminatedUnion("type", [
     type: z.literal("programming"),
     // Not auto-scored: the student compares their work with the reference themselves.
     evaluation: z.literal("self-evaluation"),
+    /** The student's own submitted code. */
+    text: z.string(),
     referenceSolution: z.string(),
     rubric: z.string().optional(),
   }),

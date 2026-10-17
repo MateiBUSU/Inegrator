@@ -34,7 +34,7 @@ interface FakeAttempt {
   answers: {
     questionId: string;
     answer: unknown;
-    isCorrect: boolean;
+    isCorrect: boolean | null;
     objectiveId: string | null;
   }[];
 }
@@ -271,8 +271,17 @@ describe("POST /api/materials/:id/attempts", () => {
 
     expect(store.attempts).toHaveLength(1);
     expect(store.attempts[0]).toMatchObject({ studentId: student.id, score: 2, maxScore: 2 });
-    // Programming has no verdict, so it is not stored as a (false) incorrect answer.
-    expect(store.attempts[0]?.answers.map((a) => a.questionId)).toEqual(["m1", "s1"]);
+    // Programming is stored too, but "not graded" (null), never as a false incorrect answer.
+    expect(store.attempts[0]?.answers).toEqual([
+      expect.objectContaining({ questionId: "m1", isCorrect: true }),
+      expect.objectContaining({ questionId: "s1", isCorrect: true }),
+      {
+        questionId: "p1",
+        answer: { text: "int main(){}" },
+        isCorrect: null,
+        objectiveId: null,
+      },
+    ]);
   });
 
   it("ignores any client-supplied score or student id", async () => {
@@ -390,6 +399,17 @@ describe("GET /api/attempts/:id", () => {
       correct: ["a", "b"],
       explanation: "EXPLICATIE-SECRETA",
     });
+  });
+
+  it("returns the student's own programming answer, and mcq/short verdicts stay true/false", async () => {
+    const { student, id } = await makeAttempt();
+    const res = await request(app).get(`/api/attempts/${id}`).set("Cookie", student.cookie);
+    const byId = (q: string) =>
+      res.body.attempt.results.find((r: { questionId: string }) => r.questionId === q);
+    expect(byId("p1")).toMatchObject({ evaluation: "self-evaluation", text: "int main(){}" });
+    expect(byId("p1")).not.toHaveProperty("isCorrect");
+    expect(byId("s1")).toMatchObject({ isCorrect: true });
+    expect(res.body.attempt).toMatchObject({ score: 2, maxScore: 2, selfEvaluationCount: 1 });
   });
 
   it("does not let another student, or a teacher, read the attempt (same 404 as missing)", async () => {

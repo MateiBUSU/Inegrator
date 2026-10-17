@@ -58,6 +58,7 @@ function gradeQuestion(question: Question, answer: SubmittedAnswer | undefined):
     ...base,
     type: "programming",
     evaluation: "self-evaluation",
+    text: answer?.text ?? "",
     referenceSolution: question.referenceSolution ?? "",
     ...(question.rubric ? { rubric: question.rubric } : {}),
   };

@@ -13,7 +13,8 @@ export interface AttemptRecord {
 export interface NewAttemptAnswer {
   questionId: string;
   answer: unknown;
-  isCorrect: boolean;
+  /** null = not graded (programming self-evaluation). */
+  isCorrect: boolean | null;
   /** Only set when it refers to a row of the objectives catalogue. */
   objectiveId: string | null;
 }

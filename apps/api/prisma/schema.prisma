@@ -311,7 +311,8 @@ model AttemptAnswer {
   attemptId   String  @map("attempt_id") @db.Uuid
   questionId  String  @map("question_id")
   answer      Json
-  isCorrect   Boolean @map("is_correct")
+  // null = not graded (programming self-evaluation); never counted as correct or incorrect.
+  isCorrect   Boolean? @map("is_correct")
   objectiveId String? @map("objective_id") @db.Uuid
 
   attempt   QuizAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
