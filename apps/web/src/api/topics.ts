@@ -34,6 +34,12 @@ export async function listTopics(): Promise<Topic[]> {
   return topics;
 }
 
+/** GET /api/me/topics/:id (404 for a topic that is not the student's own) */
+export async function getTopic(id: string): Promise<Topic> {
+  const { topic } = await request("GET", topicPath(id), { schema: topicResponseSchema });
+  return topic;
+}
+
 /** POST /api/me/topics */
 export async function createTopic(body: CreateTopicRequest): Promise<Topic> {
   const { topic } = await request("POST", "/me/topics", { body, schema: topicResponseSchema });

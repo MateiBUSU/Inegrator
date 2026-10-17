@@ -51,6 +51,10 @@ export async function createOwnTopic(auth: AuthContext, input: CreateTopicReques
   );
 }
 
+export async function getOwnTopic(auth: AuthContext, topicId: string): Promise<Topic> {
+  return toTopic(await loadOwnedTopic(auth, topicId));
+}
+
 export async function listOwnTopics(auth: AuthContext): Promise<Topic[]> {
   assertStudent(auth);
   return (await listTopicsByStudent(auth.userId)).map(toTopic);

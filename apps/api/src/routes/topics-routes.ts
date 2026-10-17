@@ -45,6 +45,11 @@ export function createTopicsRouter(): Router {
     res.json(topicListResponseSchema.parse({ topics }));
   });
 
+  router.get("/:id", validateParams(topicParamsSchema), async (req, res) => {
+    const topic = await topicService.getOwnTopic(getAuth(req), String(req.params.id));
+    res.json(topicResponseSchema.parse({ topic }));
+  });
+
   router.delete("/:id", validateParams(topicParamsSchema), async (req, res) => {
     await topicService.deleteOwnTopic(getAuth(req), String(req.params.id));
     res.status(204).end();

@@ -12,6 +12,7 @@ import { StudentTopicsPage } from "./student-topics-page";
 
 const mocks = vi.hoisted(() => ({
   listTopics: vi.fn(),
+  getTopic: vi.fn(),
   createTopic: vi.fn(),
   deleteTopic: vi.fn(),
   listTutorMessages: vi.fn(),
@@ -68,6 +69,7 @@ function renderDetail() {
 beforeEach(() => {
   for (const mock of Object.values(mocks)) mock.mockReset();
   mocks.listTopics.mockResolvedValue([topic]);
+  mocks.getTopic.mockResolvedValue(topic);
   mocks.listTutorMessages.mockResolvedValue(history);
   mocks.getPolicy.mockResolvedValue(policy);
   mocks.listMaterials.mockResolvedValue([]);
@@ -166,9 +168,10 @@ describe("StudentTopicDetailPage", () => {
   });
 
   it("says so when the topic is not the student's own", async () => {
-    mocks.listTopics.mockResolvedValue([]);
+    mocks.getTopic.mockRejectedValue(new ApiError(404, "TOPIC_NOT_FOUND"));
     renderDetail();
     expect(await screen.findByText("Subiectul nu a fost găsit.")).toBeTruthy();
+    expect(mocks.getTopic).toHaveBeenCalledWith(TOPIC_ID);
   });
 });
 

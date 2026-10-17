@@ -10,16 +10,14 @@ import { KIND_LABELS, policySummary } from "../lib/labels";
 
 export function StudentTopicDetailPage() {
   const { id = "" } = useParams();
-  // The topic itself comes from the list (there is no single-topic endpoint); an id that is not
-  // in the student's own list is shown as "not found", same as the API would answer.
   const { data, error, loading, reload } = useApiData(async () => {
-    const [topics, messages, policy, materials] = await Promise.all([
-      api.topics.listTopics(),
+    const [topic, messages, policy, materials] = await Promise.all([
+      api.topics.getTopic(id),
       api.topics.listTutorMessages(id),
       api.topics.getPolicy(id),
       api.topics.listMaterials(id),
     ]);
-    return { topic: topics.find((t) => t.id === id) ?? null, messages, policy, materials };
+    return { topic, messages, policy, materials };
   }, [id]);
   const [generating, setGenerating] = useState<"lesson" | "quiz" | null>(null);
   const [generateError, setGenerateError] = useState<string | null>(null);
@@ -47,8 +45,7 @@ export function StudentTopicDetailPage() {
       </p>
       {loading && !data ? <LoadingState message="Se încarcă subiectul…" /> : null}
       {!loading && error ? <ErrorState message={userMessage(error)} onRetry={reload} /> : null}
-      {data && !data.topic ? <ErrorState message="Subiectul nu a fost găsit." /> : null}
-      {data?.topic ? (
+      {data ? (
         <>
           <h1>{data.topic.title}</h1>
           <p className="muted">{data.topic.goal}</p>

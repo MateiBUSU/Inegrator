@@ -460,6 +460,7 @@ describe("topics: create, list, delete", () => {
     const routes: ["get" | "post" | "delete", string][] = [
       ["post", "/api/me/topics"],
       ["get", "/api/me/topics"],
+      ["get", `/api/me/topics/${id}`],
       ["delete", `/api/me/topics/${id}`],
       ["get", `/api/me/topics/${id}/policy`],
       ["get", `/api/me/topics/${id}/tutor-messages`],
@@ -545,6 +546,29 @@ describe("another student's topic is a 404, identical to a missing one", () => {
 });
 
 // --- tutor ----------------------------------------------------------------------------------
+
+describe("GET /api/me/topics/:id", () => {
+  it("returns the owner's topic", async () => {
+    const ana = makeUser();
+    const topic = await newTopic(ana);
+    const res = await as(ana, "get", `/api/me/topics/${topic.id}`);
+    expect(res.status).toBe(200);
+    expect(res.body.topic).toMatchObject({ id: topic.id, title: "Rețele" });
+    expect(Object.keys(res.body.topic).sort()).toEqual(["createdAt", "goal", "id", "title"]);
+  });
+
+  it("answers 404 to another student and for an unknown id, with the same body", async () => {
+    const ana = makeUser();
+    const bob = makeUser();
+    const topic = await newTopic(ana);
+    const other = await as(bob, "get", `/api/me/topics/${topic.id}`);
+    const missing = await as(bob, "get", `/api/me/topics/${crypto.randomUUID()}`);
+    expect(other.status).toBe(404);
+    expect(other.body).toEqual(missing.body);
+    expect(JSON.stringify(other.body)).not.toContain(topic.id);
+    expect((await as(ana, "get", "/api/me/topics/not-a-uuid")).status).toBe(400);
+  });
+});
 
 describe("GET /api/me/topics/:id/tutor-messages", () => {
   const seedMessages = (user: TestUser, topicId: string, n: number) => {
