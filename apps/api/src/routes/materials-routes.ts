@@ -1,5 +1,8 @@
 import { Router } from "express";
 import {
+  attemptResponseSchema,
+  submitAttemptRequestSchema,
+  type SubmitAttemptRequest,
   generateMaterialRequestSchema,
   generateMaterialResponseSchema,
   type GenerateMaterialRequest,
@@ -20,6 +23,7 @@ import {
 import { getAuth, requireAuth, requireRole } from "../middleware/auth";
 import { createGenerationRateLimiter } from "../middleware/rate-limit";
 import { validateBody, validateParams, validateQuery } from "../middleware/validate";
+import * as attemptService from "../services/attempt-service";
 import * as generationService from "../services/generation-service";
 import * as materialService from "../services/material-service";
 
@@ -77,6 +81,21 @@ export function createMaterialsRouter(): Router {
         : studentMaterialResponseSchema.parse({ material: result.material }),
     );
   });
+
+  router.post(
+    "/:id/attempts",
+    requireRole("student"),
+    validateParams(materialIdParamsSchema),
+    validateBody(submitAttemptRequestSchema),
+    async (req, res) => {
+      const attempt = await attemptService.submitAttempt(
+        getAuth(req),
+        String(req.params.id),
+        req.body as SubmitAttemptRequest,
+      );
+      res.status(201).json(attemptResponseSchema.parse({ attempt }));
+    },
+  );
 
   router.patch(
     "/:id",

@@ -5,6 +5,7 @@ import helmet from "helmet";
 import { env } from "./config/env";
 import { errorHandler, notFoundHandler } from "./middleware/error-handler";
 import { createAuthRouter } from "./routes/auth-routes";
+import { createAttemptsRouter } from "./routes/attempts-routes";
 import { createClassesRouter } from "./routes/classes-routes";
 import { createClassDocumentsRouter, createDocumentsRouter } from "./routes/documents-routes";
 import { healthRouter } from "./routes/health-routes";
@@ -34,6 +35,7 @@ export function createApp() {
   app.use("/api/documents", createDocumentsRouter());
   app.use("/api/subjects", createSubjectsRouter());
   app.use("/api/materials", createMaterialsRouter());
+  app.use("/api/attempts", createAttemptsRouter());
   app.use("/api/me", createMeRouter());
 
   app.use(notFoundHandler);

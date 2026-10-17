@@ -159,3 +159,26 @@ export async function isAssignedToStudent(materialId: string, studentId: string)
   });
   return count > 0;
 }
+
+/**
+ * Published materials assigned to a class this student is enrolled in (optionally one class).
+ * A classId the student is not enrolled in simply matches nothing.
+ */
+export function listPublishedForStudent(
+  studentId: string,
+  classId?: string,
+): Promise<MaterialRecord[]> {
+  return prisma.material.findMany({
+    where: {
+      scope: "class",
+      status: "published",
+      assignments: {
+        some: {
+          ...(classId ? { classId } : {}),
+          class: { enrollments: { some: { studentId } } },
+        },
+      },
+    },
+    orderBy: { publishedAt: "desc" },
+  });
+}

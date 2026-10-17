@@ -30,6 +30,8 @@ const MESSAGES: Record<string, string> = {
   NO_DOCUMENTS: "Adaugă mai întâi un document.",
   // materials
   MATERIAL_NOT_FOUND: "Materialul nu a fost găsit.",
+  ATTEMPT_NOT_FOUND: "Încercarea nu a fost găsită.",
+  INVALID_ANSWERS: "Răspunsurile trimise nu corespund materialului.",
   MATERIAL_NOT_DRAFT: "Materialul publicat nu mai poate fi modificat. Creează o versiune nouă.",
   MATERIAL_NOT_PUBLISHED: "Materialul trebuie publicat mai întâi.",
   MATERIAL_CHANGED: "Materialul a fost modificat între timp. Reîncarcă pagina.",
