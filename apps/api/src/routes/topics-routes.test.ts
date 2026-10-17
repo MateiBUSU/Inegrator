@@ -355,6 +355,8 @@ function capturing() {
       seen.tutor.push(input);
       return mock.tutorReply(input);
     },
+    generatePracticeExercise: (input) => mock.generatePracticeExercise(input),
+    diagnosePracticeAnswer: (input) => mock.diagnosePracticeAnswer(input),
   };
   return { provider, seen };
 }

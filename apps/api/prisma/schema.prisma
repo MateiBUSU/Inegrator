@@ -89,6 +89,25 @@ enum TutorRole {
   @@map("tutor_role")
 }
 
+enum ExplanationStrategy {
+  ANALOGIE
+  PAS_CU_PAS
+  EXEMPLU_LUCRAT
+  EXPLICATIE_VIZUALA
+  PARCURGERE_COD
+  INTREBARE_SOCRATICA
+
+  @@map("explanation_strategy")
+}
+
+enum ObjectiveProgressStatus {
+  not_started
+  struggling
+  mastered
+
+  @@map("objective_progress_status")
+}
+
 model User {
   id           String   @id @default(uuid()) @db.Uuid
   email        String   @unique
@@ -97,18 +116,21 @@ model User {
   displayName  String   @map("display_name")
   createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
-  classesTaught   Class[]           @relation("ClassTeacher")
-  enrollments     Enrollment[]
-  learningTopics  LearningTopic[]
-  documents       TeacherDocument[]
-  materials       Material[]
-  quizAttempts    QuizAttempt[]
-  lessonProgress  LessonProgress[]
-  objectiveStats  ObjectiveStat[]
-  studentPolicies StudentPolicy[]
-  recommendations Recommendation[]
-  tutorMessages   TutorMessage[]
-  aiUsage         AiUsage[]
+  classesTaught     Class[]             @relation("ClassTeacher")
+  enrollments       Enrollment[]
+  learningTopics    LearningTopic[]
+  documents         TeacherDocument[]
+  materials         Material[]
+  quizAttempts      QuizAttempt[]
+  lessonProgress    LessonProgress[]
+  objectiveStats    ObjectiveStat[]
+  studentPolicies   StudentPolicy[]
+  recommendations   Recommendation[]
+  tutorMessages     TutorMessage[]
+  aiUsage           AiUsage[]
+  objectiveProgress ObjectiveProgress[]
+  practiceExercises PracticeExercise[]
+  practiceAttempts  PracticeAttempt[]
 
   @@map("users")
 }
@@ -202,11 +224,14 @@ model Objective {
   text      String
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
-  chapter         Chapter?         @relation(fields: [chapterId], references: [id], onDelete: Cascade)
-  topic           LearningTopic?   @relation(fields: [topicId], references: [id], onDelete: Cascade)
-  attemptAnswers  AttemptAnswer[]
-  objectiveStats  ObjectiveStat[]
-  recommendations Recommendation[]
+  chapter           Chapter?            @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  topic             LearningTopic?      @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  attemptAnswers    AttemptAnswer[]
+  objectiveStats    ObjectiveStat[]
+  recommendations   Recommendation[]
+  objectiveProgress ObjectiveProgress[]
+  practiceExercises PracticeExercise[]
+  practiceAttempts  PracticeAttempt[]
 
   @@index([chapterId])
   @@index([topicId])
@@ -307,13 +332,13 @@ model QuizAttempt {
 }
 
 model AttemptAnswer {
-  id          String  @id @default(uuid()) @db.Uuid
-  attemptId   String  @map("attempt_id") @db.Uuid
-  questionId  String  @map("question_id")
+  id          String   @id @default(uuid()) @db.Uuid
+  attemptId   String   @map("attempt_id") @db.Uuid
+  questionId  String   @map("question_id")
   answer      Json
   // null = not graded (programming self-evaluation); never counted as correct or incorrect.
   isCorrect   Boolean? @map("is_correct")
-  objectiveId String? @map("objective_id") @db.Uuid
+  objectiveId String?  @map("objective_id") @db.Uuid
 
   attempt   QuizAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
   objective Objective?  @relation(fields: [objectiveId], references: [id])
@@ -416,4 +441,63 @@ model AiUsage {
 
   @@id([userId, day])
   @@map("ai_usage")
+}
+
+// Adaptive practice loop (class objectives). One row per student and objective.
+model ObjectiveProgress {
+  id                 String                  @id @default(uuid()) @db.Uuid
+  studentId          String                  @map("student_id") @db.Uuid
+  objectiveId        String                  @map("objective_id") @db.Uuid
+  status             ObjectiveProgressStatus @default(not_started)
+  attemptsCount      Int                     @default(0) @map("attempts_count")
+  // In the order they were used.
+  strategiesTried    ExplanationStrategy[]   @default([]) @map("strategies_tried")
+  currentExplanation String?                 @map("current_explanation")
+  updatedAt          DateTime                @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  student   User      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  objective Objective @relation(fields: [objectiveId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, objectiveId])
+  @@map("objective_progress")
+}
+
+// One generated exercise. `question` holds the full question WITH its answer key; a student only
+// ever sees it through toStudentQuestion. answered_at is set once, by the submit.
+model PracticeExercise {
+  id          String    @id @default(uuid()) @db.Uuid
+  studentId   String    @map("student_id") @db.Uuid
+  objectiveId String    @map("objective_id") @db.Uuid
+  question    Json
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  answeredAt  DateTime? @map("answered_at") @db.Timestamptz(6)
+
+  student   User             @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  objective Objective        @relation(fields: [objectiveId], references: [id], onDelete: Cascade)
+  attempt   PracticeAttempt?
+
+  @@index([studentId, objectiveId])
+  @@map("practice_exercises")
+}
+
+model PracticeAttempt {
+  id              String               @id @default(uuid()) @db.Uuid
+  studentId       String               @map("student_id") @db.Uuid
+  objectiveId     String               @map("objective_id") @db.Uuid
+  exerciseId      String               @unique @map("exercise_id") @db.Uuid
+  // The question text only, never the answer key.
+  exerciseContent String               @map("exercise_content")
+  submittedAnswer String               @map("submitted_answer")
+  isCorrect       Boolean              @map("is_correct")
+  feedbackText    String?              @map("feedback_text")
+  // The strategy that preceded the exercise (null for the first attempt on an objective).
+  strategyUsed    ExplanationStrategy? @map("strategy_used")
+  createdAt       DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  student   User             @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  objective Objective        @relation(fields: [objectiveId], references: [id], onDelete: Cascade)
+  exercise  PracticeExercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+
+  @@index([studentId, objectiveId])
+  @@map("practice_attempts")
 }

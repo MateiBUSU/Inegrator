@@ -1,11 +1,15 @@
 import {
+  generatedExerciseSchema,
   generatedLessonSchema,
   generatedQuizSchema,
+  practiceDiagnosisSchema,
   solvedQuestionsSchema,
   styleNotesSuggestionSchema,
   tutorReplySchema,
+  type GeneratedExercise,
   type GeneratedLesson,
   type GeneratedQuiz,
+  type PracticeDiagnosis,
   type Question,
   type SolvedQuestions,
   type StyleNotesSuggestion,
@@ -16,6 +20,8 @@ import type {
   AiProviderName,
   ContentGenerator,
   LessonInput,
+  PracticeDiagnosisInput,
+  PracticeExerciseInput,
   QuizInput,
   SolveInput,
   StyleNotesInput,
@@ -33,6 +39,8 @@ export interface AiEngine {
   extractStyleNotes(input: StyleNotesInput): Promise<StyleNotesSuggestion>;
   solveQuestions(input: SolveInput): Promise<SolvedQuestions>;
   tutorReply(input: TutorInput): Promise<TutorReply>;
+  generatePracticeExercise(input: PracticeExerciseInput): Promise<GeneratedExercise>;
+  diagnosePracticeAnswer(input: PracticeDiagnosisInput): Promise<PracticeDiagnosis>;
 }
 
 const MAX_ATTEMPTS = 2; // the first call plus exactly one retry with the same input
@@ -135,6 +143,24 @@ export function createAiEngine(provider: ContentGenerator): AiEngine {
         provider.provider,
         () => provider.tutorReply(input),
         (raw) => tutorReplySchema.parse(raw),
+      ),
+
+    generatePracticeExercise: (input) =>
+      validatedCall(
+        provider.provider,
+        () => provider.generatePracticeExercise(input),
+        (raw) => {
+          const parsed = generatedExerciseSchema.parse(raw);
+          assertQuestionsMatch([parsed.question], new Set([input.objective.id]));
+          return { question: uncheckedAll([parsed.question])[0] ?? parsed.question };
+        },
+      ),
+
+    diagnosePracticeAnswer: (input) =>
+      validatedCall(
+        provider.provider,
+        () => provider.diagnosePracticeAnswer(input),
+        (raw) => practiceDiagnosisSchema.parse(raw),
       ),
   };
 }

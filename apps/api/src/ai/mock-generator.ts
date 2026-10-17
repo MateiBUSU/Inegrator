@@ -1,7 +1,10 @@
+import { EXPLANATION_STRATEGIES } from "@app/shared";
 import type {
   ContentGenerator,
   LessonInput,
   Objective,
+  PracticeDiagnosisInput,
+  PracticeExerciseInput,
   QuizInput,
   SolveInput,
   StyleNotesInput,
@@ -186,6 +189,30 @@ export class MockGenerator implements ContentGenerator {
           : "Începem cu explicația, apoi un exemplu.",
         "(Răspuns generat de mock; nu este conținut real.)",
       ].join("\n\n"),
+    };
+  }
+
+  // The correct option of a mock exercise depends on the strategy that preceded it, so a test can
+  // tell which exercise it got: a/b/c/d/a/b... for strategy 0 (or none), 1, 2, ...
+  async generatePracticeExercise(input: PracticeExerciseInput): Promise<unknown> {
+    const index = input.strategy ? EXPLANATION_STRATEGIES.indexOf(input.strategy) + 1 : 0;
+    return {
+      metadata: { generator: "mock" },
+      question: { ...mcq(index, input.objective), id: "q1" },
+    };
+  }
+
+  async diagnosePracticeAnswer(input: PracticeDiagnosisInput): Promise<unknown> {
+    return {
+      metadata: { generator: "mock" },
+      feedback: clip(
+        `Răspunsul tău „${clip(input.submittedAnswer, 100)}” nu este corect pentru: ${input.question.prompt}`,
+        1500,
+      ),
+      explanation: clip(
+        `Explicație (${input.strategy}) pentru obiectivul „${input.objective.text}”. Strategii folosite înainte: ${input.previousStrategies.join(", ") || "niciuna"}. (Generat de mock.)`,
+        3500,
+      ),
     };
   }
 }

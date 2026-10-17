@@ -46,6 +46,13 @@ const MESSAGES: Record<string, string> = {
   TOPIC_LIMIT_REACHED: "Ai atins numărul maxim de subiecte. Șterge unul pentru a adăuga altul.",
   TOPIC_NOT_READY: "Subiectul nu are un obiectiv de învățare.",
 
+  // adaptive practice
+  OBJECTIVE_NOT_FOUND: "Obiectivul nu a fost găsit.",
+  EXERCISE_NOT_FOUND: "Exercițiul nu a fost găsit.",
+  EXERCISE_ALREADY_SUBMITTED: "Ai trimis deja un răspuns la acest exercițiu.",
+  PROGRESS_NOT_FOUND: "Nu ai început încă exerciții la acest obiectiv.",
+  PRACTICE_CAPPED:
+    "Ai încercat toate strategiile pentru acest obiectiv. Cere ajutorul profesorului.",
   // AI
   QUOTA_EXCEEDED: "Ai atins limita zilnică de generări cu AI. Încearcă din nou mâine.",
   AI_UNAVAILABLE: "Generarea cu AI nu este disponibilă momentan. Încearcă mai târziu.",

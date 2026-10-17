@@ -38,6 +38,8 @@ function scripted(responses: unknown[]) {
     extractStyleNotes: (input) => mock.extractStyleNotes(input),
     solveQuestions: (input) => mock.solveQuestions(input),
     tutorReply: (input) => mock.tutorReply(input),
+    generatePracticeExercise: (input) => mock.generatePracticeExercise(input),
+    diagnosePracticeAnswer: (input) => mock.diagnosePracticeAnswer(input),
   };
   return { generator, calls };
 }
@@ -88,6 +90,8 @@ describe("AI engine: validation and the single retry", () => {
       extractStyleNotes: (input) => mock.extractStyleNotes(input),
       solveQuestions: (input) => mock.solveQuestions(input),
       tutorReply: (input) => mock.tutorReply(input),
+      generatePracticeExercise: (input) => mock.generatePracticeExercise(input),
+      diagnosePracticeAnswer: (input) => mock.diagnosePracticeAnswer(input),
     });
 
     const error = await engine.generateLesson(lessonInput).catch((e: unknown) => e);

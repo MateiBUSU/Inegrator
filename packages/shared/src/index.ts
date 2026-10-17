@@ -8,4 +8,5 @@ export * from "./health";
 export * from "./materials";
 export * from "./personal";
 export * from "./policy";
+export * from "./practice";
 export * from "./safe-text";

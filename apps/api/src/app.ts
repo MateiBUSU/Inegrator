@@ -11,6 +11,7 @@ import { createClassDocumentsRouter, createDocumentsRouter } from "./routes/docu
 import { healthRouter } from "./routes/health-routes";
 import { createMaterialsRouter, createSubjectsRouter } from "./routes/materials-routes";
 import { createMeRouter } from "./routes/me-routes";
+import { createPracticeRouter } from "./routes/practice-routes";
 import { createTopicsRouter } from "./routes/topics-routes";
 
 export function createApp() {
@@ -37,6 +38,7 @@ export function createApp() {
   app.use("/api/subjects", createSubjectsRouter());
   app.use("/api/materials", createMaterialsRouter());
   app.use("/api/attempts", createAttemptsRouter());
+  app.use("/api/objectives", createPracticeRouter());
   app.use("/api/me/topics", createTopicsRouter());
   app.use("/api/me", createMeRouter());
 

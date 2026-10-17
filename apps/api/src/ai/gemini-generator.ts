@@ -2,6 +2,8 @@ import { GoogleGenAI } from "@google/genai";
 import type {
   ContentGenerator,
   LessonInput,
+  PracticeDiagnosisInput,
+  PracticeExerciseInput,
   QuizInput,
   SolveInput,
   StyleNotesInput,
@@ -9,6 +11,8 @@ import type {
 } from "./generator";
 import {
   buildLessonPrompt,
+  buildPracticeDiagnosisPrompt,
+  buildPracticeExercisePrompt,
   buildQuizPrompt,
   buildSolvePrompt,
   buildStyleNotesPrompt,
@@ -80,5 +84,13 @@ export class GeminiGenerator implements ContentGenerator {
 
   tutorReply(input: TutorInput): Promise<unknown> {
     return this.callJson(buildTutorPrompt(input));
+  }
+
+  generatePracticeExercise(input: PracticeExerciseInput): Promise<unknown> {
+    return this.callJson(buildPracticeExercisePrompt(input));
+  }
+
+  diagnosePracticeAnswer(input: PracticeDiagnosisInput): Promise<unknown> {
+    return this.callJson(buildPracticeDiagnosisPrompt(input));
   }
 }
