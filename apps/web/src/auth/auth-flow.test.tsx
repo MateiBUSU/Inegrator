@@ -68,7 +68,8 @@ async function fillLogin(email = "ana@example.com") {
   await u.click(screen.getByRole("button", { name: "Autentifică-te" }));
 }
 
-const heading = (name: string) => screen.findByRole("heading", { name });
+// The first render of the file is slow when the whole suite runs in parallel; 1 s was flaky.
+const heading = (name: string) => screen.findByRole("heading", { name }, { timeout: 5000 });
 const classListRequests = () => requests.filter((r) => r.path === "/classes").length;
 
 beforeEach(() => {

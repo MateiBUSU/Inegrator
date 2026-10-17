@@ -43,6 +43,17 @@ function bodyParserResponse(err: { status: number; type?: string }) {
   return { code: "BAD_REQUEST", message: "Cerere invalidă." };
 }
 
+/**
+ * Log form of an unexpected error: its name and stack frames, never the message. Messages can
+ * echo request data (a Prisma validation error prints the query arguments, e.g. a password hash).
+ */
+function describeError(err: unknown): string {
+  if (!(err instanceof Error)) return "Unexpected non-Error value thrown";
+  const messageLines = err.message.split("\n").length;
+  const frames = (err.stack ?? "").split("\n").slice(messageLines);
+  return [`Unhandled ${err.name}`, ...frames].join("\n");
+}
+
 export const notFoundHandler: RequestHandler = (_req, _res, next) => {
   next(new HttpError(404, "NOT_FOUND", "Resursa nu a fost găsită."));
 };
@@ -64,7 +75,7 @@ export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
     res.status(err.status).json({ error: bodyParserResponse(err) });
     return;
   }
-  console.error(err);
+  console.error(describeError(err));
   res
     .status(500)
     .json({ error: { code: "INTERNAL_ERROR", message: "A apărut o eroare internă." } });
