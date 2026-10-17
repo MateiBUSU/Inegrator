@@ -11,6 +11,7 @@
     "typecheck": "npm run typecheck --workspaces --if-present",
     "lint": "eslint .",
     "format": "prettier --write .",
+    "pretest": "npm run db:generate -w @app/api",
     "test": "vitest run"
   },
   "devDependencies": {

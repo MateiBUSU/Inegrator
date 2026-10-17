@@ -10,6 +10,18 @@ export class HttpError extends Error {
   }
 }
 
+function isBodyParserError(err: unknown): err is { status: number; type: string } {
+  return (
+    typeof err === "object" &&
+    err !== null &&
+    "type" in err &&
+    typeof err.type === "string" &&
+    err.type.startsWith("entity.") &&
+    "status" in err &&
+    typeof err.status === "number"
+  );
+}
+
 export const notFoundHandler: RequestHandler = (_req, _res, next) => {
   next(new HttpError(404, "NOT_FOUND", "Resursa nu a fost găsită."));
 };
@@ -18,6 +30,17 @@ export const notFoundHandler: RequestHandler = (_req, _res, next) => {
 export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
   if (err instanceof HttpError) {
     res.status(err.status).json({ error: { code: err.code, message: err.message } });
+    return;
+  }
+  // Malformed or oversized JSON bodies, raised by express.json().
+  if (isBodyParserError(err)) {
+    const tooLarge = err.type === "entity.too.large";
+    res.status(err.status).json({
+      error: {
+        code: tooLarge ? "PAYLOAD_TOO_LARGE" : "INVALID_BODY",
+        message: tooLarge ? "Cererea este prea mare." : "Corpul cererii nu este JSON valid.",
+      },
+    });
     return;
   }
   console.error(err);

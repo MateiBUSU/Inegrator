@@ -29,6 +29,12 @@ npm run db:seed -w @app/api      # idempotent, provisional curriculum
 npm run db:check -w @app/api     # row counts
 ```
 
+## Auth
+
+`apps/api/.env` also needs `JWT_SECRET` (32+ chars) and `TEACHER_SECRET` (8+ chars, teachers must send it as `teacher_secret` to register). See `.env.example`.
+
+Endpoints: `POST /api/auth/register`, `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/me`. The session is a JWT in an httpOnly cookie named `token`.
+
 ## Checks
 
 ```bash
