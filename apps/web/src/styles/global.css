@@ -1,412 +1,343 @@
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap");
+@import "tailwindcss";
+
 /*
- * TODO(restyle): placeholder styling. The student and teacher designs will come from Figma.
- * Everything visual lives in this one file and is driven by the variables below, so replacing
- * the tokens (and then the rules) is all the restyle should need; components only use class names.
+ * Nexora design tokens (design/nexora/DESIGN-SYSTEM.md, Light Mode).
+ * TODO(dark-mode): the Dark Mode palette from the design system is not applied yet.
+ * Components keep their semantic class names (.card, .badge, .field, ...) and get their look
+ * from the @layer components block below; layout-level markup uses Tailwind utilities directly.
  */
+@theme {
+  --font-sans: "Manrope", sans-serif;
 
-:root {
-  /* colors (placeholders) */
-  --color-bg: #f6f7f9;
-  --color-surface: #ffffff;
-  --color-text: #1c2430;
-  --color-text-muted: #5b6676;
-  --color-border: #d5dae1;
-  --color-primary: #2459c7;
-  --color-primary-text: #ffffff;
-  --color-danger: #b3261e;
-  --color-danger-bg: #fdecea;
+  --color-canvas: #fbf8ef;
+  --color-surface: #fffdf7;
+  --color-primary: #24345f;
+  --color-line: #e6e0d3;
+  --color-ink: #0f172a;
+  --color-ink-2: #475569;
+  --color-ink-3: #64748b;
+  --color-success: #39705d;
+  --color-success-ink: #2f6553;
+  --color-success-soft: #edf5f1;
+  --color-danger: #e11d48;
+  --color-danger-ink: #be123c;
+  --color-danger-soft: #fff1f2;
+  --color-warning: #f59e0b;
+  --color-warning-ink: #92400e;
+  --color-warning-soft: #fef6e0;
+  --color-violet: #7c3aed;
+  --color-violet-soft: #f3eefe;
+  /* Derived tints (not in the design doc): hover and quiet backgrounds. */
+  --color-primary-soft: #eef1f8;
+  --color-subtle: #f4f0e4;
 
-  /* spacing scale (placeholders) */
-  --space-1: 0.25rem;
-  --space-2: 0.5rem;
-  --space-3: 1rem;
-  --space-4: 1.5rem;
-  --space-5: 2.5rem;
-
-  /* shape and type (placeholders) */
-  --radius: 6px;
-  --font-body: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --content-width: 960px;
-  --narrow-width: 480px;
+  --radius-badge: 8px;
+  --radius-control: 12px;
+  --radius-card: 16px;
+  --radius-panel: 24px;
 }
 
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
+@layer base {
+  body {
+    @apply bg-canvas font-sans text-ink min-w-80 leading-normal antialiased;
+  }
+
+  h1 {
+    @apply mb-2 text-3xl leading-tight font-extrabold tracking-tight;
+  }
+
+  h2 {
+    @apply mb-3 text-lg leading-snug font-bold;
+  }
+
+  h3 {
+    @apply font-bold;
+  }
+
+  a {
+    @apply text-primary font-semibold underline-offset-2 hover:underline;
+  }
+
+  code {
+    @apply bg-subtle rounded-badge px-1.5 py-0.5 font-mono text-[0.9em];
+  }
+
+  :focus-visible {
+    @apply outline-primary outline-2 outline-offset-2;
+  }
 }
 
-body {
-  margin: 0;
-  font-family: var(--font-body);
-  color: var(--color-text);
-  background: var(--color-bg);
-  line-height: 1.5;
-}
+@layer components {
+  /* ---- layout helpers shared by pages ---- */
+  .card {
+    @apply bg-surface border-line rounded-card mb-4 border p-5;
+  }
 
-a {
-  color: var(--color-primary);
-}
+  .card.narrow {
+    @apply mx-auto max-w-md;
+  }
 
-h1,
-h2 {
-  margin: 0 0 var(--space-3);
-  line-height: 1.25;
-}
+  .card-list {
+    @apply m-0 grid list-none gap-4 p-0 sm:grid-cols-2 xl:grid-cols-3;
+  }
 
-h2 {
-  font-size: 1.15rem;
-}
+  .card-list .card {
+    @apply mb-0 transition hover:shadow-md;
+  }
 
-/* layout */
-.app-header {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  padding: var(--space-3) var(--space-4);
-  background: var(--color-surface);
-  border-bottom: 1px solid var(--color-border);
-}
+  .card-list .card h2 {
+    @apply mb-1;
+  }
 
-.app-title {
-  font-weight: 700;
-  text-decoration: none;
-  color: var(--color-text);
-}
+  .card-list .card p {
+    @apply text-ink-2 mb-1 text-sm;
+  }
 
-.app-nav {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-3);
-}
+  .card-list .card .badge {
+    @apply ml-1 align-middle;
+  }
 
-.app-nav a.active {
-  font-weight: 700;
-}
+  .plain-list {
+    @apply mb-4 list-none p-0;
+  }
 
-.app-user {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  color: var(--color-text-muted);
-}
+  .toolbar {
+    @apply mb-5 flex flex-wrap items-end justify-between gap-4;
+  }
 
-.app-main {
-  max-width: var(--content-width);
-  margin: 0 auto;
-  padding: var(--space-4);
-}
+  .button-row {
+    @apply flex flex-wrap items-center gap-2;
+  }
 
-/* cards and lists */
-.card {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  padding: var(--space-3) var(--space-4);
-  margin-bottom: var(--space-3);
-}
+  .document-row {
+    @apply border-line flex flex-wrap items-center justify-between gap-2 border-b py-3;
+  }
 
-.card.narrow {
-  max-width: var(--narrow-width);
-  margin-left: auto;
-  margin-right: auto;
-}
+  /* ---- forms ---- */
+  .field {
+    @apply mb-4 flex flex-col gap-1.5;
+  }
 
-.card-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
+  .inline-field {
+    @apply mb-0;
+  }
 
-.card-list .card h2,
-.card-list .card p {
-  margin: 0 0 var(--space-2);
-}
+  label {
+    @apply text-ink text-sm font-bold;
+  }
 
-/* forms */
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  margin-bottom: var(--space-3);
-}
+  label.inline {
+    @apply mr-4 inline-flex items-center gap-1.5 font-semibold;
+  }
 
-input[type="text"],
-input[type="email"],
-input[type="password"],
-select {
-  font: inherit;
-  padding: var(--space-2);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  background: var(--color-surface);
-}
+  label.block,
+  label.inline-block {
+    @apply my-1 block font-semibold;
+  }
 
-fieldset {
-  border: 0;
-  padding: 0;
-  margin: 0 0 var(--space-3);
-}
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  select,
+  textarea {
+    @apply bg-surface border-line text-ink placeholder:text-ink-3 focus:border-primary rounded-control w-full border px-3.5 py-2.5 text-base font-medium outline-none focus:ring-2 focus:ring-[#24345f]/20 disabled:opacity-60;
+  }
 
-label.inline {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-  margin-right: var(--space-3);
-}
+  textarea {
+    @apply resize-y;
+  }
 
-button {
-  font: inherit;
-  padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--color-primary);
-  border-radius: var(--radius);
-  background: var(--color-primary);
-  color: var(--color-primary-text);
-  cursor: pointer;
-}
+  textarea.code-input,
+  .code-block,
+  code {
+    @apply font-mono;
+  }
 
-button:disabled {
-  opacity: 0.6;
-  cursor: progress;
-}
+  input[type="checkbox"],
+  input[type="radio"] {
+    @apply accent-primary size-4;
+  }
 
-.app-user button,
-.state button {
-  background: transparent;
-  color: var(--color-primary);
-}
+  input[type="file"] {
+    @apply text-ink-2 text-sm;
+  }
 
-.field-hint {
-  color: var(--color-text-muted);
-}
+  input[type="file"]::file-selector-button {
+    @apply bg-primary-soft border-line text-primary mr-3 cursor-pointer rounded-lg border px-3 py-1.5 text-sm font-bold;
+  }
 
-.field-error {
-  color: var(--color-danger);
-}
+  fieldset {
+    @apply m-0 mb-4 border-0 p-0;
+  }
 
-/* loading / empty / error states */
-.state {
-  margin: var(--space-3) 0;
-  padding: var(--space-3);
-  border-radius: var(--radius);
-}
+  legend {
+    @apply mb-1.5 text-sm font-bold;
+  }
 
-.state p {
-  margin: 0 0 var(--space-2);
-}
+  .field-hint {
+    @apply text-ink-3 text-xs;
+  }
 
-.state-loading,
-.state-empty {
-  color: var(--color-text-muted);
-}
+  .field-error {
+    @apply text-danger-ink text-xs font-semibold;
+  }
 
-.state-error {
-  color: var(--color-danger);
-  background: var(--color-danger-bg);
-  border: 1px solid var(--color-danger);
-}
+  /* ---- buttons ---- */
+  button,
+  .button,
+  a.button {
+    @apply bg-primary border-primary rounded-control cursor-pointer border px-4 py-2.5 text-sm font-bold text-white no-underline shadow-sm transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50;
+  }
 
-/* ---- Stage 8: teacher screens (TODO(restyle): placeholder styling, replace with the Figma design) ---- */
+  .button,
+  a.button {
+    @apply inline-block hover:no-underline;
+  }
 
-:root {
-  --color-success: #1b6e3c;
-  --color-success-bg: #e8f5ec;
-  --color-warning: #8a5a00;
-  --color-warning-bg: #fff6e0;
-  --color-muted-bg: #eef0f3;
-}
+  button.button-secondary,
+  .app-user button,
+  .state button {
+    @apply text-ink-2 bg-surface border-line hover:bg-subtle shadow-none hover:opacity-100;
+  }
 
-.muted {
-  color: var(--color-text-muted);
-}
+  /* ---- loading / empty / error states ---- */
+  .state {
+    @apply rounded-control my-4 p-4;
+  }
 
-.success {
-  color: var(--color-success);
-}
+  .state p {
+    @apply mb-2 last:mb-0;
+  }
 
-.plain-list {
-  list-style: none;
-  margin: 0 0 var(--space-3);
-  padding: 0;
-}
+  .state-loading {
+    @apply text-ink-3 font-semibold;
+  }
 
-.document-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-2);
-  padding: var(--space-2) 0;
-  border-bottom: 1px solid var(--color-border);
-}
+  .state-empty {
+    @apply text-ink-3 border-line bg-surface rounded-card border border-dashed p-6 text-center;
+  }
 
-.button-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  align-items: center;
-}
+  .state-error {
+    @apply bg-danger-soft border-danger/40 text-danger-ink border font-semibold;
+  }
 
-.button,
-a.button {
-  display: inline-block;
-  font: inherit;
-  padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--color-primary);
-  border-radius: var(--radius);
-  background: var(--color-primary);
-  color: var(--color-primary-text);
-  text-decoration: none;
-}
+  .notice {
+    @apply bg-subtle border-line rounded-card my-4 border p-4 text-sm;
+  }
 
-button.button-secondary {
-  background: transparent;
-  color: var(--color-primary);
-}
+  .notice p {
+    @apply mb-2 last:mb-0;
+  }
 
-.toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: var(--space-3);
-  margin-bottom: var(--space-3);
-}
+  .notice-warning {
+    @apply bg-warning-soft border-warning/50 text-warning-ink;
+  }
 
-.inline-field {
-  margin-bottom: 0;
-}
+  .muted {
+    @apply text-ink-3;
+  }
 
-label.block,
-label.inline-block {
-  display: block;
-  margin: var(--space-1) 0;
-}
+  .success {
+    @apply text-success-ink font-semibold;
+  }
 
-textarea {
-  font: inherit;
-  padding: var(--space-2);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  background: var(--color-surface);
-  resize: vertical;
-}
+  /* ---- badges (status and verification) ---- */
+  .badge {
+    @apply bg-subtle text-ink-2 rounded-badge inline-flex items-center px-2 py-0.5 text-xs font-bold tracking-wide uppercase;
+  }
 
-textarea.code-input,
-.code-block,
-code {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-}
+  .badge-published,
+  .badge-confirmed {
+    @apply bg-success-soft text-success-ink;
+  }
 
-.code-block,
-.suggestion {
-  background: var(--color-muted-bg);
-  padding: var(--space-3);
-  border-radius: var(--radius);
-  overflow-x: auto;
-  white-space: pre-wrap;
-}
+  .badge-unconfirmed,
+  .badge-draft {
+    @apply bg-warning-soft text-warning-ink;
+  }
 
-.notice {
-  padding: var(--space-3);
-  border-radius: var(--radius);
-  border: 1px solid var(--color-border);
-  background: var(--color-muted-bg);
-  margin: var(--space-3) 0;
-}
+  /* ---- materials ---- */
+  .question-header {
+    @apply mb-3 flex flex-wrap items-center gap-2;
+  }
 
-.notice p {
-  margin: 0 0 var(--space-2);
-}
+  .question-header h3 {
+    @apply m-0 mr-1 text-base;
+  }
 
-.notice-warning {
-  border-color: var(--color-warning);
-  background: var(--color-warning-bg);
-  color: var(--color-warning);
-}
+  .options {
+    @apply pl-6;
+  }
 
-.badge {
-  display: inline-block;
-  padding: 0 var(--space-2);
-  border-radius: 999px;
-  font-size: 0.85rem;
-  border: 1px solid var(--color-border);
-  background: var(--color-muted-bg);
-}
+  .option-correct {
+    @apply text-success-ink font-bold;
+  }
 
-.badge-published,
-.badge-confirmed {
-  color: var(--color-success);
-  background: var(--color-success-bg);
-  border-color: var(--color-success);
-}
+  .option-row {
+    @apply mb-2 flex items-center gap-2;
+  }
 
-.badge-unconfirmed,
-.badge-draft {
-  color: var(--color-warning);
-  background: var(--color-warning-bg);
-  border-color: var(--color-warning);
-}
+  .option-row input[type="text"] {
+    @apply flex-1;
+  }
 
-.question-header {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-2);
-  margin-bottom: var(--space-2);
-}
+  .option-id {
+    @apply font-bold;
+  }
 
-.question-header h3 {
-  margin: 0;
-}
+  .confirm-bar,
+  .save-bar {
+    @apply flex flex-wrap items-center gap-4;
+  }
 
-.options {
-  padding-left: var(--space-4);
-}
+  .confirm-bar {
+    @apply mb-4;
+  }
 
-.option-correct {
-  color: var(--color-success);
-}
+  /* TODO(restyle): the sticky bar overlaps the content slightly at the bottom of long pages. */
+  .save-bar {
+    @apply sticky bottom-0 shadow-lg;
+  }
 
-.option-row {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  margin-bottom: var(--space-2);
-}
+  .suggestion {
+    @apply bg-violet-soft rounded-control mb-3 p-4 whitespace-pre-wrap;
+  }
 
-.option-row input[type="text"] {
-  flex: 1;
-}
+  .code-block {
+    @apply bg-subtle rounded-control overflow-x-auto p-4 text-sm whitespace-pre-wrap;
+  }
 
-.confirm-bar,
-.save-bar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-3);
-}
+  .explanation {
+    @apply border-violet bg-violet-soft/50 rounded-control mt-3 border-l-4 py-2 pr-3 pl-4;
+  }
 
-.save-bar {
-  position: sticky;
-  bottom: 0;
-}
+  .markdown > :first-child {
+    @apply mt-0;
+  }
 
-.markdown > :first-child {
-  margin-top: 0;
-}
+  .markdown p,
+  .markdown ul,
+  .markdown ol {
+    @apply my-3;
+  }
 
-.markdown pre {
-  background: var(--color-muted-bg);
-  padding: var(--space-3);
-  border-radius: var(--radius);
-  overflow-x: auto;
-}
+  .markdown ul {
+    @apply list-disc pl-6;
+  }
 
-.explanation {
-  border-left: 3px solid var(--color-border);
-  padding-left: var(--space-3);
+  .markdown ol {
+    @apply list-decimal pl-6;
+  }
+
+  .markdown pre {
+    @apply bg-subtle rounded-control overflow-x-auto p-4 text-sm;
+  }
+
+  .markdown h1,
+  .markdown h2,
+  .markdown h3 {
+    @apply mt-5 mb-2;
+  }
 }

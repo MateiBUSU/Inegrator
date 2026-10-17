@@ -23,16 +23,18 @@ export function TeacherClassDetailPage() {
 
   return (
     <section>
-      <p>
-        <Link to="/teacher/classes">← Clasele mele</Link>
-      </p>
-      <h1>{cls.name}</h1>
-      <div className="card">
-        <p>{gradeLabel(cls.grade)}</p>
-        <p>
-          Cod de alăturare: <code>{cls.join_code}</code>
+      <div className="bg-primary rounded-panel mb-6 p-6 text-white">
+        <p className="mb-4">
+          <Link to="/teacher/classes" className="text-white/80">
+            ← Clasele mele
+          </Link>
         </p>
-        <p className="muted">Creată pe {formatDate(cls.created_at)}</p>
+        <h1 className="text-white">{cls.name}</h1>
+        <p className="text-white/80">{gradeLabel(cls.grade)}</p>
+        <p className="text-white/80">
+          Cod de alăturare: <code className="text-ink">{cls.join_code}</code>
+        </p>
+        <p className="text-sm text-white/70">Creată pe {formatDate(cls.created_at)}</p>
       </div>
 
       <ClassStudents classId={cls.id} students={cls.students} joinCode={cls.join_code} />

@@ -6,3 +6,4 @@ apps/api/prisma/migrations
 package-lock.json
 .claude
 CLAUDE.md
+design

@@ -22,7 +22,13 @@ export function TeacherMaterialsPage() {
 
   return (
     <section>
-      <h1>Materiale</h1>
+      <header className="mb-6">
+        <p className="text-primary text-xs font-extrabold tracking-wide uppercase">
+          Spațiul profesorului
+        </p>
+        <h1>Materiale</h1>
+        <p className="text-ink-2">Ciorne, materiale publicate și arhivate, într-un singur loc.</p>
+      </header>
       <div className="toolbar">
         <div className="field inline-field">
           <label htmlFor="status-filter">Stare</label>

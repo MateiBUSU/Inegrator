@@ -6,6 +6,7 @@ import { Link, Navigate, useLocation } from "react-router";
 import { api, FALLBACK_MESSAGE, userMessage } from "../api";
 import { useAuth } from "../auth/auth-context";
 import { redirectTargetFor } from "../auth/paths";
+import { AuthShell } from "../components/auth-shell";
 import { ErrorState } from "../components/error-state";
 import { FormField } from "../components/form-field";
 import { loginFormSchema, type LoginFormValues } from "../forms/auth-schemas";
@@ -42,10 +43,13 @@ export function LoginPage() {
   }
 
   return (
-    <section className="card narrow">
-      <h1>Autentificare</h1>
+    <AuthShell
+      eyebrow="Bine ai venit"
+      title="Autentifică-te în cont"
+      subtitle="Continuă progresul de unde ai rămas."
+    >
       <form onSubmit={(event) => void handleSubmit(onSubmit)(event)} noValidate>
-        <FormField label="Email" htmlFor="login-email" error={errors.email?.message}>
+        <FormField label="Adresă de email" htmlFor="login-email" error={errors.email?.message}>
           <input id="login-email" type="email" autoComplete="email" {...register("email")} />
         </FormField>
         <FormField label="Parolă" htmlFor="login-password" error={errors.password?.message}>
@@ -57,13 +61,13 @@ export function LoginPage() {
           />
         </FormField>
         {submitError ? <ErrorState message={submitError} /> : null}
-        <button type="submit" disabled={isSubmitting}>
+        <button type="submit" className="w-full" disabled={isSubmitting}>
           {isSubmitting ? "Se autentifică…" : "Autentifică-te"}
         </button>
       </form>
-      <p>
-        Nu ai cont? <Link to="/register">Înregistrează-te</Link>
+      <p className="mt-4 text-center text-sm">
+        Nu ai cont? <Link to="/register">Creează unul gratuit</Link>
       </p>
-    </section>
+    </AuthShell>
   );
 }

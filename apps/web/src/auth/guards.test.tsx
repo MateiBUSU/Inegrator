@@ -26,7 +26,7 @@ const PROTECTED_PATHS = [
   "/student/progress",
 ];
 
-const loginHeading = () => screen.queryByRole("heading", { name: "Autentificare" });
+const loginHeading = () => screen.queryByRole("heading", { name: "Autentifică-te în cont" });
 const forbiddenHeading = () => screen.queryByRole("heading", { name: "Acces interzis" });
 
 beforeEach(() => {
@@ -54,7 +54,7 @@ describe("route guards: unauthenticated users", () => {
     expect(screen.getByRole("heading", { name: "Informatică pentru liceu" })).not.toBeNull();
     cleanup();
     renderAt(<App />, { path: "/register", auth: { user: null } });
-    expect(screen.getByRole("heading", { name: "Înregistrare" })).not.toBeNull();
+    expect(screen.getByRole("heading", { name: "Cum vei folosi Nexora?" })).not.toBeNull();
   });
 });
 

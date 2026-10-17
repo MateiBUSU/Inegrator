@@ -6,6 +6,7 @@ import { Link, Navigate } from "react-router";
 import { api, FALLBACK_MESSAGE, userMessage } from "../api";
 import { useAuth } from "../auth/auth-context";
 import { homePathFor } from "../auth/paths";
+import { AuthShell } from "../components/auth-shell";
 import { ErrorState } from "../components/error-state";
 import { FormField } from "../components/form-field";
 import { registerFormSchema, type RegisterFormValues } from "../forms/auth-schemas";
@@ -53,25 +54,52 @@ export function RegisterPage() {
   }
 
   return (
-    <section className="card narrow">
-      <h1>Înregistrare</h1>
+    <AuthShell
+      eyebrow="Creează cont"
+      title="Cum vei folosi Nexora?"
+      subtitle="Alege tipul de cont și completează datele."
+    >
       <form onSubmit={(event) => void handleSubmit(onSubmit)(event)} noValidate>
-        <fieldset>
-          <legend>Sunt</legend>
-          <label className="inline">
-            <input type="radio" value="student" {...register("role")} /> elev
+        <fieldset className="grid gap-3 sm:grid-cols-2">
+          <legend className="sr-only">Tipul de cont</legend>
+          <label className="block cursor-pointer">
+            <input
+              type="radio"
+              value="teacher"
+              aria-label="Cont profesor"
+              className="peer sr-only"
+              {...register("role")}
+            />
+            <span className="bg-surface border-line peer-checked:border-primary peer-checked:bg-primary-soft rounded-card peer-focus-visible:outline-primary flex h-full flex-col gap-1 border-2 p-4 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2">
+              <span className="text-ink font-extrabold">Cont profesor</span>
+              <span className="text-ink-3 text-xs leading-relaxed font-medium">
+                Creează clase, materiale și teste. Monitorizează progresul.
+              </span>
+            </span>
           </label>
-          <label className="inline">
-            <input type="radio" value="teacher" {...register("role")} /> profesor
+          <label className="block cursor-pointer">
+            <input
+              type="radio"
+              value="student"
+              aria-label="Cont elev"
+              className="peer sr-only"
+              {...register("role")}
+            />
+            <span className="bg-surface border-line peer-checked:border-primary peer-checked:bg-primary-soft rounded-card peer-focus-visible:outline-primary flex h-full flex-col gap-1 border-2 p-4 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2">
+              <span className="text-ink font-extrabold">Cont elev</span>
+              <span className="text-ink-3 text-xs leading-relaxed font-medium">
+                Alătură-te claselor, învață și urmărește-ți progresul.
+              </span>
+            </span>
           </label>
           {errors.role?.message ? (
-            <small className="field-error" role="alert">
+            <small className="field-error sm:col-span-2" role="alert">
               {errors.role.message}
             </small>
           ) : null}
         </fieldset>
 
-        <FormField label="Email" htmlFor="register-email" error={errors.email?.message}>
+        <FormField label="Adresă de email" htmlFor="register-email" error={errors.email?.message}>
           <input id="register-email" type="email" autoComplete="email" {...register("email")} />
         </FormField>
         <FormField
@@ -117,13 +145,13 @@ export function RegisterPage() {
         ) : null}
 
         {submitError ? <ErrorState message={submitError} /> : null}
-        <button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Se creează contul…" : "Creează cont"}
+        <button type="submit" className="w-full" disabled={isSubmitting}>
+          {isSubmitting ? "Se creează contul…" : "Creează contul"}
         </button>
       </form>
-      <p>
+      <p className="mt-4 text-center text-sm">
         Ai deja cont? <Link to="/login">Autentifică-te</Link>
       </p>
-    </section>
+    </AuthShell>
   );
 }

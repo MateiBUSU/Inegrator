@@ -43,7 +43,7 @@ describe("login form", () => {
   it("rejects a malformed email in Romanian", async () => {
     const u = user();
     renderAt(<LoginPage />, { path: "/login", auth: noUser });
-    await u.type(text("Email"), "nu-este-email");
+    await u.type(text("Adresă de email"), "nu-este-email");
     await u.type(text("Parolă"), "parola");
     await u.click(screen.getByRole("button", { name: "Autentifică-te" }));
 
@@ -54,7 +54,7 @@ describe("login form", () => {
   it("sends the normalized credentials and then reloads the session", async () => {
     const u = user();
     renderAt(<LoginPage />, { path: "/login", auth: noUser });
-    await u.type(text("Email"), "  Ana@Example.COM ");
+    await u.type(text("Adresă de email"), "  Ana@Example.COM ");
     await u.type(text("Parolă"), "parola-lunga");
     await u.click(screen.getByRole("button", { name: "Autentifică-te" }));
 
@@ -69,7 +69,7 @@ describe("login form", () => {
     mocks.login.mockRejectedValue(new ApiError(401, "INVALID_CREDENTIALS"));
     const u = user();
     renderAt(<LoginPage />, { path: "/login", auth: noUser });
-    await u.type(text("Email"), "ana@example.com");
+    await u.type(text("Adresă de email"), "ana@example.com");
     await u.type(text("Parolă"), "gresita");
     await u.click(screen.getByRole("button", { name: "Autentifică-te" }));
 
@@ -84,7 +84,7 @@ describe("login form", () => {
     mocks.login.mockRejectedValue(new Error("boom"));
     const u = user();
     renderAt(<LoginPage />, { path: "/login", auth: noUser });
-    await u.type(text("Email"), "ana@example.com");
+    await u.type(text("Adresă de email"), "ana@example.com");
     await u.type(text("Parolă"), "parola");
     await u.click(screen.getByRole("button", { name: "Autentifică-te" }));
     expect((await screen.findByRole("alert")).textContent).toBe(
@@ -95,7 +95,7 @@ describe("login form", () => {
   it("says so when the session cannot be read right after a successful login", async () => {
     const u = user();
     renderAt(<LoginPage />, { path: "/login", auth: noUser });
-    await u.type(text("Email"), "ana@example.com");
+    await u.type(text("Adresă de email"), "ana@example.com");
     await u.type(text("Parolă"), "parola");
 
     refetch.mockResolvedValueOnce(null); // /me answered "nobody is signed in"
@@ -108,7 +108,7 @@ describe("login form", () => {
   it("shows the network message when /me fails right after logging in", async () => {
     const u = user();
     renderAt(<LoginPage />, { path: "/login", auth: noUser });
-    await u.type(text("Email"), "ana@example.com");
+    await u.type(text("Adresă de email"), "ana@example.com");
     await u.type(text("Parolă"), "parola");
 
     refetch.mockRejectedValueOnce(new ApiError(0, "NETWORK_ERROR"));
@@ -121,7 +121,7 @@ describe("login form", () => {
   it("limits the password length like the API does", async () => {
     const u = user();
     renderAt(<LoginPage />, { path: "/login", auth: noUser });
-    await u.type(text("Email"), "ana@example.com");
+    await u.type(text("Adresă de email"), "ana@example.com");
     await u.click(text("Parolă"));
     await u.paste("x".repeat(129));
     await u.click(screen.getByRole("button", { name: "Autentifică-te" }));
@@ -131,7 +131,7 @@ describe("login form", () => {
 
   it("links to the registration page", () => {
     renderAt(<LoginPage />, { path: "/login", auth: noUser });
-    expect(screen.getByRole("link", { name: "Înregistrează-te" }).getAttribute("href")).toBe(
+    expect(screen.getByRole("link", { name: "Creează unul gratuit" }).getAttribute("href")).toBe(
       "/register",
     );
   });
@@ -142,23 +142,25 @@ describe("register form", () => {
     u: ReturnType<typeof userEvent.setup>,
     overrides: Record<string, string> = {},
   ) {
-    await u.type(text("Email"), overrides.email ?? "Ana@Example.com");
+    await u.type(text("Adresă de email"), overrides.email ?? "Ana@Example.com");
     await u.type(text("Nume afișat"), overrides.name ?? "Ana");
     await u.type(text("Parolă"), overrides.password ?? "parola-lunga");
   }
 
   it("defaults to student and hides the teacher code", () => {
     renderAt(<RegisterPage />, { path: "/register", auth: noUser });
-    expect((screen.getByRole("radio", { name: "elev" }) as HTMLInputElement).checked).toBe(true);
+    expect((screen.getByRole("radio", { name: "Cont elev" }) as HTMLInputElement).checked).toBe(
+      true,
+    );
     expect(screen.queryByLabelText("Cod de profesor")).toBeNull();
   });
 
   it("shows the teacher code field only when the role is teacher", async () => {
     const u = user();
     renderAt(<RegisterPage />, { path: "/register", auth: noUser });
-    await u.click(screen.getByRole("radio", { name: "profesor" }));
+    await u.click(screen.getByRole("radio", { name: "Cont profesor" }));
     expect(screen.queryByLabelText("Cod de profesor")).not.toBeNull();
-    await u.click(screen.getByRole("radio", { name: "elev" }));
+    await u.click(screen.getByRole("radio", { name: "Cont elev" }));
     expect(screen.queryByLabelText("Cod de profesor")).toBeNull();
   });
 
@@ -166,7 +168,7 @@ describe("register form", () => {
     const u = user();
     renderAt(<RegisterPage />, { path: "/register", auth: noUser });
     await fill(u);
-    await u.click(screen.getByRole("button", { name: "Creează cont" }));
+    await u.click(screen.getByRole("button", { name: "Creează contul" }));
 
     await waitFor(() => expect(mocks.register).toHaveBeenCalledTimes(1));
     expect(mocks.register).toHaveBeenCalledWith({
@@ -182,11 +184,11 @@ describe("register form", () => {
   it("does not send a teacher code typed earlier if the user switched back to student", async () => {
     const u = user();
     renderAt(<RegisterPage />, { path: "/register", auth: noUser });
-    await u.click(screen.getByRole("radio", { name: "profesor" }));
+    await u.click(screen.getByRole("radio", { name: "Cont profesor" }));
     await u.type(text("Cod de profesor"), "secret-typed-by-mistake");
-    await u.click(screen.getByRole("radio", { name: "elev" }));
+    await u.click(screen.getByRole("radio", { name: "Cont elev" }));
     await fill(u);
-    await u.click(screen.getByRole("button", { name: "Creează cont" }));
+    await u.click(screen.getByRole("button", { name: "Creează contul" }));
 
     await waitFor(() => expect(mocks.register).toHaveBeenCalledTimes(1));
     expect(mocks.register.mock.calls[0]?.[0]).not.toHaveProperty("teacher_secret");
@@ -195,10 +197,10 @@ describe("register form", () => {
   it("sends the teacher code when registering as a teacher", async () => {
     const u = user();
     renderAt(<RegisterPage />, { path: "/register", auth: noUser });
-    await u.click(screen.getByRole("radio", { name: "profesor" }));
+    await u.click(screen.getByRole("radio", { name: "Cont profesor" }));
     await fill(u, { email: "prof@example.com", name: "Profesor" });
     await u.type(text("Cod de profesor"), "codul-meu");
-    await u.click(screen.getByRole("button", { name: "Creează cont" }));
+    await u.click(screen.getByRole("button", { name: "Creează contul" }));
 
     await waitFor(() => expect(mocks.register).toHaveBeenCalledTimes(1));
     expect(mocks.register).toHaveBeenCalledWith({
@@ -213,9 +215,9 @@ describe("register form", () => {
   it("requires the teacher code for teachers, in Romanian", async () => {
     const u = user();
     renderAt(<RegisterPage />, { path: "/register", auth: noUser });
-    await u.click(screen.getByRole("radio", { name: "profesor" }));
+    await u.click(screen.getByRole("radio", { name: "Cont profesor" }));
     await fill(u);
-    await u.click(screen.getByRole("button", { name: "Creează cont" }));
+    await u.click(screen.getByRole("button", { name: "Creează contul" }));
 
     expect(await screen.findByText("Introdu codul de profesor.")).not.toBeNull();
     expect(mocks.register).not.toHaveBeenCalled();
@@ -224,7 +226,7 @@ describe("register form", () => {
   it("shows Romanian messages for empty and too-short fields", async () => {
     const u = user();
     renderAt(<RegisterPage />, { path: "/register", auth: noUser });
-    await u.click(screen.getByRole("button", { name: "Creează cont" }));
+    await u.click(screen.getByRole("button", { name: "Creează contul" }));
     expect(await screen.findByText("Introdu adresa de email.")).not.toBeNull();
     expect(screen.getByText("Introdu un nume afișat.")).not.toBeNull();
     expect(screen.getByText("Parola trebuie să aibă cel puțin 8 caractere.")).not.toBeNull();
@@ -235,7 +237,7 @@ describe("register form", () => {
     const u = user();
     renderAt(<RegisterPage />, { path: "/register", auth: noUser });
     await fill(u, { name: "x".repeat(61) });
-    await u.click(screen.getByRole("button", { name: "Creează cont" }));
+    await u.click(screen.getByRole("button", { name: "Creează contul" }));
     expect(
       await screen.findByText("Numele afișat poate avea cel mult 60 de caractere."),
     ).not.toBeNull();
@@ -246,7 +248,7 @@ describe("register form", () => {
     renderAt(<RegisterPage />, { path: "/register", auth: noUser });
     await fill(u);
     refetch.mockResolvedValueOnce(null);
-    await u.click(screen.getByRole("button", { name: "Creează cont" }));
+    await u.click(screen.getByRole("button", { name: "Creează contul" }));
     expect((await screen.findByRole("alert")).textContent).toBe(
       "A apărut o eroare. Încearcă din nou.",
     );
@@ -255,11 +257,11 @@ describe("register form", () => {
   it("limits the teacher code length like the API does", async () => {
     const u = user();
     renderAt(<RegisterPage />, { path: "/register", auth: noUser });
-    await u.click(screen.getByRole("radio", { name: "profesor" }));
+    await u.click(screen.getByRole("radio", { name: "Cont profesor" }));
     await fill(u);
     await u.click(text("Cod de profesor"));
     await u.paste("c".repeat(257));
-    await u.click(screen.getByRole("button", { name: "Creează cont" }));
+    await u.click(screen.getByRole("button", { name: "Creează contul" }));
     expect(await screen.findByText("Codul de profesor este prea lung.")).not.toBeNull();
     expect(mocks.register).not.toHaveBeenCalled();
   });
@@ -278,7 +280,7 @@ describe("register form", () => {
     const u = user();
     renderAt(<RegisterPage />, { path: "/register", auth: noUser });
     await fill(u);
-    await u.click(screen.getByRole("button", { name: "Creează cont" }));
+    await u.click(screen.getByRole("button", { name: "Creează contul" }));
     expect((await screen.findByRole("alert")).textContent).toBe(message);
     expect(refetch).not.toHaveBeenCalled();
   });
@@ -286,7 +288,7 @@ describe("register form", () => {
   it("masks the password and the teacher code", async () => {
     const u = user();
     renderAt(<RegisterPage />, { path: "/register", auth: noUser });
-    await u.click(screen.getByRole("radio", { name: "profesor" }));
+    await u.click(screen.getByRole("radio", { name: "Cont profesor" }));
     expect(text("Parolă").type).toBe("password");
     expect(text("Cod de profesor").type).toBe("password");
   });

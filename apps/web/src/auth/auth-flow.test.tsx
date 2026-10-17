@@ -63,7 +63,7 @@ function renderAt(path: string) {
 
 async function fillLogin(email = "ana@example.com") {
   const u = userEvent.setup();
-  await u.type(await screen.findByLabelText("Email"), email);
+  await u.type(await screen.findByLabelText("Adresă de email"), email);
   await u.type(screen.getByLabelText("Parolă"), "parola-lunga");
   await u.click(screen.getByRole("button", { name: "Autentifică-te" }));
 }
@@ -91,21 +91,21 @@ afterEach(() => {
 describe("signing in", () => {
   it("sends an unauthenticated visitor to /login, then back to the page they wanted", async () => {
     renderAt("/teacher/classes");
-    expect(await heading("Autentificare")).not.toBeNull();
+    expect(await heading("Autentifică-te în cont")).not.toBeNull();
     expect(classListRequests()).toBe(0); // the protected page never even asked for data
 
     loginYields = teacherUser;
     await fillLogin("prof@example.com");
 
     expect(await heading("Clasele mele")).not.toBeNull();
-    expect(screen.queryByRole("heading", { name: "Autentificare" })).toBeNull();
+    expect(screen.queryByRole("heading", { name: "Autentifică-te în cont" })).toBeNull();
     expect(screen.getByText("Prof Test")).not.toBeNull();
     expect(classListRequests()).toBe(1);
   });
 
   it("sends a student who was bounced from a teacher page to the student home, not to /forbidden", async () => {
     renderAt("/teacher/classes");
-    await heading("Autentificare");
+    await heading("Autentifică-te în cont");
 
     loginYields = studentUser;
     await fillLogin();
@@ -120,7 +120,7 @@ describe("signing in", () => {
     renderAt("/login");
     await fillLogin();
     expect((await screen.findByRole("alert")).textContent).toBe("Email sau parolă incorecte.");
-    expect(screen.getByRole("heading", { name: "Autentificare" })).not.toBeNull();
+    expect(screen.getByRole("heading", { name: "Autentifică-te în cont" })).not.toBeNull();
     expect(session).toBeNull();
   });
 
@@ -148,7 +148,7 @@ describe("signing out", () => {
 
     await userEvent.setup().click(screen.getByRole("button", { name: "Deconectare" }));
 
-    expect(await heading("Autentificare")).not.toBeNull();
+    expect(await heading("Autentifică-te în cont")).not.toBeNull();
     expect(session).toBeNull();
     expect(screen.queryByRole("button", { name: "Deconectare" })).toBeNull();
     expect(screen.queryByText("Elev Test")).toBeNull();
@@ -183,7 +183,7 @@ describe("a session that ends while the page is open", () => {
 
     // /classes answers 401 UNAUTHENTICATED -> the client tells the provider -> /auth/me says
     // nobody is signed in -> the route guard redirects.
-    expect(await heading("Autentificare")).not.toBeNull();
+    expect(await heading("Autentifică-te în cont")).not.toBeNull();
     expect(requests.filter((r) => r.path === "/auth/me").length).toBe(meCallsBefore + 1);
     expect(screen.queryByRole("button", { name: "Deconectare" })).toBeNull();
   });

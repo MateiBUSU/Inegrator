@@ -48,7 +48,10 @@ export function TeacherClassesPage() {
 
   return (
     <section>
-      <h1>Clasele mele</h1>
+      <header className="mb-6">
+        <h1>Clasele mele</h1>
+        <p className="text-ink-2">Creează clase și gestionează elevii din fiecare clasă.</p>
+      </header>
 
       <form
         className="card inline-form"
@@ -82,12 +85,18 @@ export function TeacherClassesPage() {
       {!loading && !error && classes && classes.length > 0 ? (
         <ul className="card-list">
           {classes.map((cls) => (
-            <li key={cls.id} className="card">
-              <h2>
-                <Link to={`/teacher/classes/${cls.id}`}>{cls.name}</Link>
-              </h2>
-              <p>Clasa a {cls.grade}-a</p>
-              <p>
+            <li key={cls.id} className="card overflow-hidden p-0">
+              <div className="bg-primary p-5">
+                <p className="mb-1 text-xs font-bold tracking-wide text-white/70 uppercase">
+                  Clasa a {cls.grade}-a
+                </p>
+                <h2 className="mb-0 text-xl">
+                  <Link to={`/teacher/classes/${cls.id}`} className="text-white">
+                    {cls.name}
+                  </Link>
+                </h2>
+              </div>
+              <p className="p-5">
                 Cod de alăturare: <code>{cls.join_code}</code>
               </p>
             </li>
