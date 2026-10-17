@@ -2,7 +2,8 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
-    include: ["apps/*/src/**/*.test.ts", "packages/*/src/**/*.test.ts"],
+    include: ["apps/*/src/**/*.test.{ts,tsx}", "packages/*/src/**/*.test.ts"],
+    // Node by default; web component tests opt into jsdom with `// @vitest-environment jsdom`.
     environment: "node",
     // env.ts requires these; tests never connect to the database and use throwaway secrets.
     env: {

@@ -1,40 +1,61 @@
-import { useEffect, useState } from "react";
-import { healthResponseSchema } from "@app/shared";
+import { Route, Routes } from "react-router";
+import { RequireAuth, RequireRole } from "./auth/guards";
+import { Layout } from "./components/layout";
+import { ComingSoonPage } from "./pages/coming-soon-page";
+import { ForbiddenPage } from "./pages/forbidden-page";
+import { HomePage } from "./pages/home-page";
+import { LoginPage } from "./pages/login-page";
+import { NotFoundPage } from "./pages/not-found-page";
+import { RegisterPage } from "./pages/register-page";
+import { StudentClassesPage } from "./pages/student-classes-page";
+import { TeacherClassesPage } from "./pages/teacher-classes-page";
 
-type HealthState = { kind: "loading" } | { kind: "ok"; status: string } | { kind: "error" };
-
+/** The route table. The router itself is provided by the caller (BrowserRouter / MemoryRouter). */
 export function App() {
-  const [health, setHealth] = useState<HealthState>({ kind: "loading" });
-
-  useEffect(() => {
-    const controller = new AbortController();
-    fetch("/api/health", { signal: controller.signal })
-      .then((res) => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json();
-      })
-      .then((body) => {
-        const parsed = healthResponseSchema.parse(body);
-        setHealth({ kind: "ok", status: parsed.status });
-      })
-      .catch((err: unknown) => {
-        if (err instanceof DOMException && err.name === "AbortError") return;
-        setHealth({ kind: "error" });
-      });
-    return () => controller.abort();
-  }, []);
-
   return (
-    <main>
-      <h1>Informatica IX–XII</h1>
-      <p>
-        Stare API:{" "}
-        <strong data-testid="health-status">
-          {health.kind === "loading" && "se încarcă..."}
-          {health.kind === "ok" && health.status}
-          {health.kind === "error" && "indisponibil"}
-        </strong>
-      </p>
-    </main>
+    <Routes>
+      <Route element={<Layout />}>
+        <Route index element={<HomePage />} />
+        <Route path="login" element={<LoginPage />} />
+        <Route path="register" element={<RegisterPage />} />
+        <Route path="forbidden" element={<ForbiddenPage />} />
+
+        {/* UI guards only: the API enforces authentication, roles and ownership itself. */}
+        <Route element={<RequireAuth />}>
+          <Route element={<RequireRole role="teacher" />}>
+            <Route path="teacher/classes" element={<TeacherClassesPage />} />
+            <Route
+              path="teacher/classes/:id"
+              element={<ComingSoonPage title="Clasă" backTo="/teacher/classes" />}
+            />
+            <Route
+              path="teacher/materials"
+              element={<ComingSoonPage title="Materiale" backTo="/teacher/classes" />}
+            />
+            <Route
+              path="teacher/materials/:id"
+              element={<ComingSoonPage title="Material" backTo="/teacher/materials" />}
+            />
+          </Route>
+          <Route element={<RequireRole role="student" />}>
+            <Route path="student/classes" element={<StudentClassesPage />} />
+            <Route
+              path="student/classes/:id"
+              element={<ComingSoonPage title="Clasă" backTo="/student/classes" />}
+            />
+            <Route
+              path="student/materials/:id"
+              element={<ComingSoonPage title="Material" backTo="/student/classes" />}
+            />
+            <Route
+              path="student/progress"
+              element={<ComingSoonPage title="Progres" backTo="/student/classes" />}
+            />
+          </Route>
+        </Route>
+
+        <Route path="*" element={<NotFoundPage />} />
+      </Route>
+    </Routes>
   );
 }
