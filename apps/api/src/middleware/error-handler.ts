@@ -5,6 +5,8 @@ export class HttpError extends Error {
     readonly status: number,
     readonly code: string,
     message: string,
+    /** Optional machine-readable extras, e.g. which question ids block publishing. */
+    readonly details?: Record<string, unknown>,
   ) {
     super(message);
   }
@@ -29,7 +31,13 @@ export const notFoundHandler: RequestHandler = (_req, _res, next) => {
 // Express recognizes error handlers by their 4-argument signature.
 export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
   if (err instanceof HttpError) {
-    res.status(err.status).json({ error: { code: err.code, message: err.message } });
+    res.status(err.status).json({
+      error: {
+        code: err.code,
+        message: err.message,
+        ...(err.details ? { details: err.details } : {}),
+      },
+    });
     return;
   }
   // Malformed or oversized JSON bodies, raised by express.json().

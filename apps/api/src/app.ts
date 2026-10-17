@@ -7,6 +7,7 @@ import { errorHandler, notFoundHandler } from "./middleware/error-handler";
 import { createAuthRouter } from "./routes/auth-routes";
 import { createClassesRouter } from "./routes/classes-routes";
 import { healthRouter } from "./routes/health-routes";
+import { createMaterialsRouter, createSubjectsRouter } from "./routes/materials-routes";
 
 export function createApp() {
   const app = express();
@@ -21,6 +22,8 @@ export function createApp() {
   app.use("/api/health", healthRouter);
   app.use("/api/auth", createAuthRouter());
   app.use("/api/classes", createClassesRouter());
+  app.use("/api/subjects", createSubjectsRouter());
+  app.use("/api/materials", createMaterialsRouter());
 
   app.use(notFoundHandler);
   app.use(errorHandler);
