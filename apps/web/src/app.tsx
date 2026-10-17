@@ -1,13 +1,15 @@
 import { Route, Routes } from "react-router";
 import { RequireAuth, RequireRole } from "./auth/guards";
 import { Layout } from "./components/layout";
-import { ComingSoonPage } from "./pages/coming-soon-page";
 import { ForbiddenPage } from "./pages/forbidden-page";
 import { HomePage } from "./pages/home-page";
 import { LoginPage } from "./pages/login-page";
 import { NotFoundPage } from "./pages/not-found-page";
 import { RegisterPage } from "./pages/register-page";
+import { StudentClassDetailPage } from "./pages/student-class-detail-page";
 import { StudentClassesPage } from "./pages/student-classes-page";
+import { StudentMaterialPage } from "./pages/student-material-page";
+import { StudentProgressPage } from "./pages/student-progress-page";
 import { TeacherClassDetailPage } from "./pages/teacher-class-detail-page";
 import { TeacherClassesPage } from "./pages/teacher-classes-page";
 import { TeacherGeneratePage } from "./pages/teacher-generate-page";
@@ -40,18 +42,9 @@ export function App() {
           </Route>
           <Route element={<RequireRole role="student" />}>
             <Route path="student/classes" element={<StudentClassesPage />} />
-            <Route
-              path="student/classes/:id"
-              element={<ComingSoonPage title="Clasă" backTo="/student/classes" />}
-            />
-            <Route
-              path="student/materials/:id"
-              element={<ComingSoonPage title="Material" backTo="/student/classes" />}
-            />
-            <Route
-              path="student/progress"
-              element={<ComingSoonPage title="Progres" backTo="/student/classes" />}
-            />
+            <Route path="student/classes/:id" element={<StudentClassDetailPage />} />
+            <Route path="student/materials/:id" element={<StudentMaterialPage />} />
+            <Route path="student/progress" element={<StudentProgressPage />} />
           </Route>
         </Route>
 

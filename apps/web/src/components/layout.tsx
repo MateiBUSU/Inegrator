@@ -72,7 +72,7 @@ export function Layout() {
                 Clasele mele
               </NavLink>
               <NavLink to="/student/progress" className={navLinkClass}>
-                Progres
+                Progresul meu
               </NavLink>
             </>
           ) : null}

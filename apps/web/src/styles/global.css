@@ -253,6 +253,14 @@
     @apply bg-success-soft text-success-ink;
   }
 
+  .badge-progress-completed {
+    @apply bg-success-soft text-success-ink;
+  }
+
+  .badge-progress-started {
+    @apply bg-primary-soft text-primary;
+  }
+
   .badge-unconfirmed,
   .badge-draft {
     @apply bg-warning-soft text-warning-ink;
@@ -315,6 +323,47 @@
 
   .explanation {
     @apply border-violet bg-violet-soft/50 rounded-control mt-3 border-l-4 py-2 pr-3 pl-4;
+  }
+
+  /* ---- student screens ---- */
+  .answer-option {
+    @apply border-line rounded-control hover:bg-subtle mb-2 flex cursor-pointer items-center gap-3 border px-4 py-3 font-semibold;
+  }
+
+  .answer-option-selected {
+    @apply border-primary bg-primary-soft;
+  }
+
+  .answer-option-correct {
+    @apply border-success bg-success-soft text-success-ink;
+  }
+
+  .answer-option-wrong {
+    @apply border-danger bg-danger-soft text-danger-ink;
+  }
+
+  .result-correct {
+    @apply text-success-ink font-bold;
+  }
+
+  .result-incorrect {
+    @apply text-danger-ink font-bold;
+  }
+
+  .stat-grid {
+    @apply mb-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4;
+  }
+
+  .stat-grid .card {
+    @apply mb-0;
+  }
+
+  .stat-label {
+    @apply text-ink-2 mb-1 text-sm font-bold;
+  }
+
+  .stat-value {
+    @apply text-ink m-0 text-3xl font-extrabold;
   }
 
   .markdown > :first-child {

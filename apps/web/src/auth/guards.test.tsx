@@ -6,12 +6,26 @@ import { renderAt, studentUser, teacherUser } from "../test/render";
 
 // The real route table and the real guards, with a hand-made auth context. Pages that load data
 // get a mocked API (no network).
-const mocks = vi.hoisted(() => ({ listClasses: vi.fn(), me: vi.fn() }));
+const mocks = vi.hoisted(() => ({
+  listClasses: vi.fn(),
+  me: vi.fn(),
+  getGamification: vi.fn(),
+  listMyProgress: vi.fn(),
+  listMyMaterials: vi.fn(),
+}));
 vi.mock("../api", async (importOriginal) => {
   const actual = await importOriginal<typeof import("../api")>();
   return {
     ...actual,
-    api: { auth: { me: mocks.me }, classes: { listClasses: mocks.listClasses } },
+    api: {
+      auth: { me: mocks.me },
+      classes: { listClasses: mocks.listClasses },
+      me: {
+        getGamification: mocks.getGamification,
+        listMyProgress: mocks.listMyProgress,
+        listMyMaterials: mocks.listMyMaterials,
+      },
+    },
   };
 });
 
@@ -31,6 +45,16 @@ const forbiddenHeading = () => screen.queryByRole("heading", { name: "Acces inte
 
 beforeEach(() => {
   mocks.listClasses.mockResolvedValue([]);
+  mocks.getGamification.mockResolvedValue({
+    currentStreakDays: 0,
+    weeklyActivityCount: 0,
+    weeklyGoal: 3,
+    pointsTotal: 0,
+    level: "Începător",
+    nextLevelAt: 50,
+  });
+  mocks.listMyProgress.mockResolvedValue([]);
+  mocks.listMyMaterials.mockResolvedValue([]);
 });
 afterEach(() => {
   cleanup();
@@ -105,10 +129,9 @@ describe("route guards: the right role", () => {
     expect(mocks.listClasses).toHaveBeenCalledWith("student");
   });
 
-  it("renders a placeholder for pages whose backend screens are not built yet", () => {
+  it("renders the student progress page", async () => {
     renderAt(<App />, { path: "/student/progress", auth: { user: studentUser } });
-    expect(screen.getByRole("heading", { name: "Progres" })).not.toBeNull();
-    expect(screen.getByText(/va fi disponibilă în curând/)).not.toBeNull();
+    expect(await screen.findByRole("heading", { name: "Progresul meu" })).not.toBeNull();
   });
 
   it("shows the not-found page for unknown paths", () => {
@@ -118,12 +141,12 @@ describe("route guards: the right role", () => {
 });
 
 describe("login redirect", () => {
-  it("sends a signed-in user from /login back to where the guard sent them from", () => {
+  it("sends a signed-in user from /login back to where the guard sent them from", async () => {
     renderAt(<App />, {
       path: { pathname: "/login", state: { from: "/student/progress" } },
       auth: { user: studentUser },
     });
-    expect(screen.getByRole("heading", { name: "Progres" })).not.toBeNull();
+    expect(await screen.findByRole("heading", { name: "Progresul meu" })).not.toBeNull();
   });
 
   it("ignores a redirect target that is not a same-site path", () => {

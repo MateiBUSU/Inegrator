@@ -11,7 +11,7 @@ const errorBodySchema = z.object({
   }),
 });
 
-type Method = "GET" | "POST" | "PATCH" | "DELETE";
+type Method = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
 let onUnauthenticated: (() => void) | null = null;
 

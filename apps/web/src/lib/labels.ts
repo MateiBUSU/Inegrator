@@ -35,3 +35,12 @@ const ROMAN: Record<number, string> = { 9: "IX", 10: "X", 11: "XI", 12: "XII" };
 export function gradeLabel(grade: number): string {
   return `clasa a ${ROMAN[grade] ?? grade}-a`;
 }
+
+/** A material the student has no progress entry for is "not started". */
+export type StudentProgressState = "not_started" | "started" | "completed";
+
+export const PROGRESS_LABELS: Record<StudentProgressState, string> = {
+  not_started: "Nu a început",
+  started: "În desfășurare",
+  completed: "Încheiat",
+};

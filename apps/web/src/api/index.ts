@@ -1,7 +1,9 @@
+import * as attemptsApi from "./attempts";
 import * as authApi from "./auth";
 import * as classesApi from "./classes";
 import * as documentsApi from "./documents";
 import * as materialsApi from "./materials";
+import * as meApi from "./me";
 
 export { ApiError, FALLBACK_MESSAGE, messageForCode, userMessage } from "./errors";
 export type {
@@ -13,8 +15,10 @@ export type {
 } from "./materials";
 
 export const api = {
+  attempts: attemptsApi,
   auth: authApi,
   classes: classesApi,
   documents: documentsApi,
   materials: materialsApi,
+  me: meApi,
 };
