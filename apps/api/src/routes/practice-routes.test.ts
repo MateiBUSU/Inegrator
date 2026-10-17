@@ -18,6 +18,7 @@ interface ProgressRow {
   attemptsCount: number;
   strategiesTried: string[];
   currentExplanation: string | null;
+  helpRequestedAt: Date | null;
   updatedAt: Date;
 }
 interface ExerciseRow {
@@ -105,6 +106,7 @@ vi.mock("../repositories/practice-repository", () => {
           attemptsCount: 0,
           strategiesTried: [],
           currentExplanation: null,
+          helpRequestedAt: null,
           updatedAt: new Date(1_700_000_000_000 + ++store.tick),
         };
         store.progress.push(progress);
@@ -119,6 +121,12 @@ vi.mock("../repositories/practice-repository", () => {
       store.exercises.push(exercise);
       return { exercise: asExerciseRecord(exercise), progress: asProgressRecord(progress) };
     },
+    markHelpRequested: async (studentId: string, objectiveId: string) => {
+      const row = rowOf(studentId, objectiveId);
+      if (row && !row.helpRequestedAt)
+        row.helpRequestedAt = new Date(1_700_000_000_000 + ++store.tick);
+      return row ? asProgressRecord(row) : null;
+    },
     recordPracticeResult: async (data: {
       studentId: string;
       objectiveId: string;
@@ -128,7 +136,7 @@ vi.mock("../repositories/practice-repository", () => {
       isCorrect: boolean;
       feedbackText: string | null;
       strategyUsed: string | null;
-      progress: Omit<ProgressRow, "studentId" | "objectiveId" | "updatedAt">;
+      progress: Omit<ProgressRow, "studentId" | "objectiveId" | "updatedAt" | "helpRequestedAt">;
       nextQuestion: ExerciseRow["question"] | null;
     }) => {
       const exercise = store.exercises.find((e) => e.id === data.exerciseId);
@@ -534,6 +542,70 @@ describe("access", () => {
   it("validates the ids", async () => {
     const ana = makeEnrolledStudent();
     expect((await as(ana, "post", "/api/objectives/nope/practice/start").send()).status).toBe(400);
+  });
+});
+
+// --- asking the teacher for help ---------------------------------------------------------------
+
+describe("POST /api/objectives/:id/practice/request-help", () => {
+  const help = (user: TestUser) =>
+    as(user, "post", `/api/objectives/${O()}/practice/request-help`).send();
+
+  /** Gets a student to the cap with six wrong answers. */
+  async function capOut(user: TestUser) {
+    let exerciseId: string = (await start(user)).body.exercise.id;
+    for (let i = 0; i < PRACTICE_ATTEMPT_CAP; i++) {
+      const res = await submit(user, exerciseId, wrongAnswer(exerciseId));
+      exerciseId = res.body.nextExercise?.id;
+    }
+  }
+
+  it("rejects an objective that is not capped (never started, in progress, mastered)", async () => {
+    const ana = makeEnrolledStudent();
+    const never = await help(ana);
+    expect(never.status).toBe(404);
+    expect(never.body.error.code).toBe("PROGRESS_NOT_FOUND");
+
+    const started = await start(ana);
+    const first = await submit(
+      ana,
+      started.body.exercise.id,
+      wrongAnswer(started.body.exercise.id),
+    );
+    const inProgress = await help(ana);
+    expect(inProgress.status).toBe(409);
+    expect(inProgress.body.error.code).toBe("PRACTICE_NOT_CAPPED");
+
+    await submit(ana, first.body.nextExercise.id, rightAnswer(first.body.nextExercise.id));
+    expect((await help(ana)).status).toBe(409); // mastered
+    expect(rowOf(ana.id, O())?.helpRequestedAt).toBeNull();
+  });
+
+  it("sets the flag once a student is capped, and a second request keeps the first timestamp", async () => {
+    const ana = makeEnrolledStudent();
+    await capOut(ana);
+    const one = await help(ana);
+    expect(one.status).toBe(200);
+    expect(one.body.progress.helpRequestedAt).toEqual(expect.any(String));
+    const two = await help(ana);
+    expect(two.body.progress.helpRequestedAt).toBe(one.body.progress.helpRequestedAt);
+    expect((await progressOf(ana)).body.progress.helpRequestedAt).toBe(
+      one.body.progress.helpRequestedAt,
+    );
+  });
+
+  it("is own-progress only: another student, an outsider, a teacher and anonymous are refused", async () => {
+    const ana = makeEnrolledStudent();
+    const bob = makeEnrolledStudent();
+    const outsider = makeUser();
+    await capOut(ana);
+    expect((await help(bob)).status).toBe(404); // bob has no progress of his own
+    expect(rowOf(ana.id, O())?.helpRequestedAt).toBeNull(); // and ana's flag is untouched
+    expect((await help(outsider)).status).toBe(404);
+    expect((await help(makeUser("teacher"))).status).toBe(403);
+    expect((await request(app).post(`/api/objectives/${O()}/practice/request-help`)).status).toBe(
+      401,
+    );
   });
 });
 

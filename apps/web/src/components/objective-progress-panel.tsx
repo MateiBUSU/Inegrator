@@ -52,6 +52,14 @@ export function ObjectiveProgressPanel({ materialId }: { materialId: string }) {
                   {student.objectives.map((cell) => (
                     <td key={cell.objectiveId} className="border-line border-b p-2 align-top">
                       <ObjectiveStatusBadge status={cell.status} />
+                      {cell.helpRequestedAt ? (
+                        <span
+                          className="badge badge-help ml-1"
+                          title={`Cerut la ${new Date(cell.helpRequestedAt).toLocaleString("ro-RO")}`}
+                        >
+                          Cere ajutor
+                        </span>
+                      ) : null}
                       <div className="text-ink-2 mt-1 text-xs">Încercări: {cell.attemptsCount}</div>
                       {cell.strategiesTried.length > 0 ? (
                         <div className="text-ink-3 text-xs">

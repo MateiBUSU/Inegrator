@@ -55,6 +55,33 @@ describe("ObjectiveProgressPanel", () => {
     expect(within(bob).queryByText("Stăpânit")).toBeNull();
   });
 
+  it("highlights who asked for help, on that student's row only", async () => {
+    const cell = (helpRequestedAt: string | null) => ({
+      objectiveId: O1,
+      status: "struggling",
+      attemptsCount: 6,
+      strategiesTried: ["ANALOGIE"],
+      helpRequestedAt,
+    });
+    mocks.getObjectiveProgress.mockResolvedValue({
+      objectives: [{ id: O1, text: "Definește funcții" }],
+      students: [
+        {
+          studentId: S1,
+          displayName: "Ana",
+          classNames: ["9A"],
+          objectives: [cell("2026-10-18T09:00:00.000Z")],
+        },
+        { studentId: S2, displayName: "Bob", classNames: ["9A"], objectives: [cell(null)] },
+      ],
+    });
+    render(<ObjectiveProgressPanel materialId="m1" />);
+    const ana = (await screen.findByText("Ana")).closest("tr") as HTMLElement;
+    const bob = screen.getByText("Bob").closest("tr") as HTMLElement;
+    expect(within(ana).getByText("Cere ajutor")).toBeTruthy();
+    expect(within(bob).queryByText("Cere ajutor")).toBeNull();
+  });
+
   it("explains an empty class and shows API errors", async () => {
     mocks.getObjectiveProgress.mockResolvedValueOnce({ objectives: [], students: [] });
     const { unmount } = render(<ObjectiveProgressPanel materialId="m1" />);

@@ -23,6 +23,7 @@ import {
   findPendingExercise,
   findPracticeObjective,
   findProgress,
+  markHelpRequested,
   recordPracticeResult,
   type ObjectiveProgressRecord,
   type PracticeExerciseRecord,
@@ -64,6 +65,7 @@ function toProgress(record: ObjectiveProgressRecord): PracticeProgress {
     attemptsCount: record.attemptsCount,
     strategiesTried: record.strategiesTried,
     currentExplanation: record.currentExplanation,
+    helpRequestedAt: record.helpRequestedAt?.toISOString() ?? null,
     updatedAt: record.updatedAt.toISOString(),
   });
 }
@@ -161,6 +163,41 @@ function usableAnswer(question: Question, answer: SubmitPracticeRequest) {
   }
   const text = answer.text?.trim() ?? "";
   return text === "" ? null : { questionId: question.id, text };
+}
+
+/**
+ * The student asks the teacher for help. Only allowed once the practice loop is capped, i.e. all
+ * explanation strategies were tried without success. Asking again keeps the first timestamp.
+ */
+export async function requestPracticeHelp(
+  auth: AuthContext,
+  objectiveId: string,
+): Promise<PracticeProgress> {
+  const objective = await loadObjective(auth, objectiveId);
+  const progress = await findProgress(auth.userId, objective.id);
+  if (!progress) {
+    throw new HttpError(
+      404,
+      "PROGRESS_NOT_FOUND",
+      "Nu ai început încă exerciții la acest obiectiv.",
+    );
+  }
+  if (!isCapped(progress)) {
+    throw new HttpError(
+      409,
+      "PRACTICE_NOT_CAPPED",
+      "Poți cere ajutorul profesorului după ce ai încercat toate variantele de explicație.",
+    );
+  }
+  const saved = await markHelpRequested(auth.userId, objective.id);
+  if (!saved) {
+    throw new HttpError(
+      404,
+      "PROGRESS_NOT_FOUND",
+      "Nu ai început încă exerciții la acest obiectiv.",
+    );
+  }
+  return toProgress(saved);
 }
 
 export async function submitPractice(

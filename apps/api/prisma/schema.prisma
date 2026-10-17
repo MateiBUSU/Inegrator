@@ -453,6 +453,8 @@ model ObjectiveProgress {
   // In the order they were used.
   strategiesTried    ExplanationStrategy[]   @default([]) @map("strategies_tried")
   currentExplanation String?                 @map("current_explanation")
+  // Set when the student, capped out of the practice loop, asks the teacher for help.
+  helpRequestedAt    DateTime?               @map("help_requested_at") @db.Timestamptz(6)
   updatedAt          DateTime                @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   student   User      @relation(fields: [studentId], references: [id], onDelete: Cascade)

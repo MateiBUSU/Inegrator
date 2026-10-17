@@ -50,6 +50,8 @@ export const practiceProgressSchema = z.object({
   attemptsCount: z.number().int(),
   strategiesTried: z.array(explanationStrategySchema),
   currentExplanation: z.string().nullable(),
+  /** When the student asked the teacher for help; null if they have not. */
+  helpRequestedAt: z.string().nullable().default(null),
   updatedAt: z.string(),
 });
 export type PracticeProgress = z.infer<typeof practiceProgressSchema>;
@@ -96,6 +98,7 @@ export const studentObjectiveProgressSchema = z.object({
   status: objectiveProgressStatusSchema,
   attemptsCount: z.number().int(),
   strategiesTried: z.array(explanationStrategySchema),
+  helpRequestedAt: z.string().nullable().default(null),
 });
 
 /** One entry per enrolled student, never averaged or merged with another student's. */

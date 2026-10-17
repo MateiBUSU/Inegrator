@@ -396,6 +396,7 @@ export async function getObjectiveProgressOverview(
           status: row?.status ?? "not_started",
           attemptsCount: row?.attemptsCount ?? 0,
           strategiesTried: row?.strategiesTried ?? [],
+          helpRequestedAt: row?.helpRequestedAt?.toISOString() ?? null,
         };
       }),
     })),

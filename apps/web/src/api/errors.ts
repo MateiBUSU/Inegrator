@@ -53,6 +53,8 @@ const MESSAGES: Record<string, string> = {
   PROGRESS_NOT_FOUND: "Nu ai început încă exerciții la acest obiectiv.",
   PRACTICE_CAPPED:
     "Ai încercat toate strategiile pentru acest obiectiv. Cere ajutorul profesorului.",
+  PRACTICE_NOT_CAPPED:
+    "Poți cere ajutorul profesorului după ce ai încercat toate variantele de explicație.",
   // AI
   QUOTA_EXCEEDED: "Ai atins limita zilnică de generări cu AI. Încearcă din nou mâine.",
   AI_UNAVAILABLE: "Generarea cu AI nu este disponibilă momentan. Încearcă mai târziu.",

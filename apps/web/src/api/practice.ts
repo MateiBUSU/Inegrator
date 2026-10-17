@@ -33,6 +33,14 @@ export function submitPractice(
   });
 }
 
+/** POST .../request-help: tells the teacher; only allowed once the loop is capped. */
+export async function requestHelp(objectiveId: string): Promise<PracticeProgress> {
+  const { progress } = await request("POST", `${base(objectiveId)}/request-help`, {
+    schema: practiceProgressResponseSchema,
+  });
+  return progress;
+}
+
 /** GET .../progress; null when the student has not started this objective yet (404). */
 export async function getPracticeProgress(objectiveId: string): Promise<PracticeProgress | null> {
   try {

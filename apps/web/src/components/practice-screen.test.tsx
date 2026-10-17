@@ -5,10 +5,11 @@ import { MemoryRouter } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError } from "../api";
 import { ObjectiveList } from "./objective-list";
-import { HELP_UNAVAILABLE_NOTE, PracticeScreen } from "./practice-screen";
+import { PracticeScreen } from "./practice-screen";
 
 const mocks = vi.hoisted(() => ({
   startPractice: vi.fn(),
+  requestHelp: vi.fn(),
   submitPractice: vi.fn(),
   getPracticeProgress: vi.fn(),
 }));
@@ -127,20 +128,55 @@ describe("PracticeScreen", () => {
     expect(await screen.findByText(/Ai încercat toate variantele de explicație/)).toBeTruthy();
     expect(screen.getByText("Ai confundat valoarea cu referința.")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Continuă" })).toBeNull();
-    // No backend exists for the request, so the action is inert and says why.
-    const help = screen.getByRole("button", {
-      name: "Cere ajutor profesorului",
-    }) as HTMLButtonElement;
-    expect(help.disabled).toBe(true);
-    expect(screen.getByText(HELP_UNAVAILABLE_NOTE)).toBeTruthy();
+    // The help button calls the backend and confirms.
+    mocks.requestHelp.mockResolvedValue(
+      progress({
+        status: "struggling",
+        attemptsCount: 6,
+        helpRequestedAt: "2026-10-18T09:00:00.000Z",
+      }),
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Cere ajutor profesorului" }));
+    expect(await screen.findByText("Profesorul a fost anunțat.")).toBeTruthy();
+    expect(mocks.requestHelp).toHaveBeenCalledWith(OBJECTIVE);
+    expect(screen.queryByRole("button", { name: "Cere ajutor profesorului" })).toBeNull();
     await userEvent.click(screen.getByRole("button", { name: "Închide" }));
     expect(onClose).toHaveBeenCalled();
   });
 
   it("start answering PRACTICE_CAPPED shows the help state", async () => {
     mocks.startPractice.mockRejectedValue(new ApiError(409, "PRACTICE_CAPPED"));
+    mocks.getPracticeProgress.mockResolvedValue(null);
     renderScreen();
     expect(await screen.findByText(/Ai încercat toate variantele/)).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Cere ajutor profesorului" })).toBeTruthy();
+  });
+
+  it("remembers that help was already requested", async () => {
+    mocks.startPractice.mockRejectedValue(new ApiError(409, "PRACTICE_CAPPED"));
+    mocks.getPracticeProgress.mockResolvedValue(
+      progress({
+        status: "struggling",
+        attemptsCount: 6,
+        helpRequestedAt: "2026-10-18T09:00:00.000Z",
+      }),
+    );
+    renderScreen();
+    expect(await screen.findByText("Profesorul a fost anunțat.")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Cere ajutor profesorului" })).toBeNull();
+  });
+
+  it("shows a failed help request in Romanian and lets the student retry", async () => {
+    mocks.startPractice.mockRejectedValue(new ApiError(409, "PRACTICE_CAPPED"));
+    mocks.getPracticeProgress.mockResolvedValue(null);
+    mocks.requestHelp
+      .mockRejectedValueOnce(new ApiError(0, "NETWORK_ERROR"))
+      .mockResolvedValue(progress({ helpRequestedAt: "2026-10-18T09:00:00.000Z" }));
+    renderScreen();
+    await userEvent.click(await screen.findByRole("button", { name: "Cere ajutor profesorului" }));
+    expect(await screen.findByText(/Nu m-am putut conecta/)).toBeTruthy();
+    await userEvent.click(screen.getByRole("button", { name: "Cere ajutor profesorului" }));
+    expect(await screen.findByText("Profesorul a fost anunțat.")).toBeTruthy();
   });
 
   it("a correct answer confirms, marks mastered and waits for the student to close", async () => {

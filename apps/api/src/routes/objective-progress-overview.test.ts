@@ -17,6 +17,7 @@ const store = vi.hoisted(() => {
       attemptsCount: number;
       strategiesTried: string[];
       currentExplanation: string | null;
+      helpRequestedAt: Date | null;
       updatedAt: Date;
     }[],
   };
@@ -101,6 +102,7 @@ describe("GET /api/materials/:id/objective-progress", () => {
         attemptsCount: 3,
         strategiesTried: ["ANALOGIE", "PAS_CU_PAS"],
         currentExplanation: "PRIVATE-TEXT",
+        helpRequestedAt: null,
         updatedAt: new Date(),
       },
       {
@@ -110,6 +112,7 @@ describe("GET /api/materials/:id/objective-progress", () => {
         attemptsCount: 6,
         strategiesTried: ["ANALOGIE", "PAS_CU_PAS", "EXEMPLU_LUCRAT"],
         currentExplanation: null,
+        helpRequestedAt: new Date("2026-10-18T09:00:00.000Z"),
         updatedAt: new Date(),
       },
     );
@@ -126,17 +129,32 @@ describe("GET /api/materials/:id/objective-progress", () => {
       status: "mastered",
       attemptsCount: 3,
       strategiesTried: ["ANALOGIE", "PAS_CU_PAS"],
+      helpRequestedAt: null,
     });
     expect(rows.Bob.objectives[0]).toEqual({
       objectiveId: ids.obj1,
       status: "struggling",
       attemptsCount: 6,
       strategiesTried: ["ANALOGIE", "PAS_CU_PAS", "EXEMPLU_LUCRAT"],
+      // The teacher sees who asked for help, per student, and only that student.
+      helpRequestedAt: "2026-10-18T09:00:00.000Z",
     });
     // A student who never practiced still has a row, as not_started with zeros.
     expect(rows.Cris.objectives).toEqual([
-      { objectiveId: ids.obj1, status: "not_started", attemptsCount: 0, strategiesTried: [] },
-      { objectiveId: ids.obj2, status: "not_started", attemptsCount: 0, strategiesTried: [] },
+      {
+        objectiveId: ids.obj1,
+        status: "not_started",
+        attemptsCount: 0,
+        strategiesTried: [],
+        helpRequestedAt: null,
+      },
+      {
+        objectiveId: ids.obj2,
+        status: "not_started",
+        attemptsCount: 0,
+        strategiesTried: [],
+        helpRequestedAt: null,
+      },
     ]);
     expect(rows.Cris.classNames).toEqual(["9B"]);
     expect(JSON.stringify(res.body)).not.toContain("PRIVATE-TEXT");

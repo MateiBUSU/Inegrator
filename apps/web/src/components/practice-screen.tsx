@@ -25,28 +25,52 @@ interface PracticeScreenProps {
   onClose: () => void;
 }
 
-/** Why the "ask the teacher" action does nothing yet: no endpoint exists for it. */
-export const HELP_UNAVAILABLE_NOTE =
-  "Trimiterea cererii către profesor nu este disponibilă încă. Spune-i profesorului la oră că ai nevoie de ajutor la acest obiectiv.";
+/** Shown once the loop is capped: ask the teacher for help (they see it in their progress view). */
+function CappedNotice({
+  objectiveId,
+  alreadyRequested,
+  onClose,
+}: {
+  objectiveId: string;
+  alreadyRequested: boolean;
+  onClose: () => void;
+}) {
+  const [requested, setRequested] = useState(alreadyRequested);
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-function CappedNotice({ onClose }: { onClose: () => void }) {
+  async function ask() {
+    setError(null);
+    setSending(true);
+    try {
+      await api.practice.requestHelp(objectiveId);
+      setRequested(true);
+    } catch (err) {
+      setError(userMessage(err));
+    } finally {
+      setSending(false);
+    }
+  }
+
   return (
     <div className="notice notice-warning" role="status">
       <p>
         <strong>Ai încercat toate variantele de explicație pentru acest subiect.</strong>
       </p>
       <p>E momentul să primești ajutor direct de la profesor.</p>
-      <div className="button-row">
-        <button type="button" disabled aria-describedby="help-note">
-          Cere ajutor profesorului
+      {requested ? (
+        <p className="success">Profesorul a fost anunțat.</p>
+      ) : (
+        <button type="button" disabled={sending} onClick={() => void ask()}>
+          {sending ? "Se trimite…" : "Cere ajutor profesorului"}
         </button>
+      )}
+      {error ? <ErrorState message={error} /> : null}
+      <div className="button-row mt-2">
         <button type="button" className="button-secondary" onClick={onClose}>
           Închide
         </button>
       </div>
-      <p id="help-note" className="text-ink-3 mt-2 text-xs">
-        {HELP_UNAVAILABLE_NOTE}
-      </p>
     </div>
   );
 }
@@ -73,6 +97,11 @@ export function PracticeScreen({ objectiveId, objectiveText, onClose }: Practice
       (error: unknown) => {
         if (cancelled) return;
         if (error instanceof ApiError && error.code === "PRACTICE_CAPPED") {
+          // Learn whether help was already requested; failing to do so just shows the button.
+          api.practice.getPracticeProgress(objectiveId).then(
+            (known) => !cancelled && known && setProgress(known),
+            () => undefined,
+          );
           setPhase({ kind: "capped" });
         } else {
           setPhase({ kind: "failed", message: userMessage(error) });
@@ -107,7 +136,13 @@ export function PracticeScreen({ objectiveId, objectiveText, onClose }: Practice
       {phase.kind === "failed" ? (
         <ErrorState message={phase.message} onRetry={() => setAttempt((n) => n + 1)} />
       ) : null}
-      {phase.kind === "capped" ? <CappedNotice onClose={onClose} /> : null}
+      {phase.kind === "capped" ? (
+        <CappedNotice
+          objectiveId={objectiveId}
+          alreadyRequested={progress?.helpRequestedAt != null}
+          onClose={onClose}
+        />
+      ) : null}
 
       {phase.kind === "question" ? (
         <AttemptForm
@@ -136,7 +171,11 @@ export function PracticeScreen({ objectiveId, objectiveText, onClose }: Practice
             <SafeMarkdown>{phase.result.explanation}</SafeMarkdown>
           </div>
           {phase.result.capped || !phase.result.nextExercise ? (
-            <CappedNotice onClose={onClose} />
+            <CappedNotice
+              objectiveId={objectiveId}
+              alreadyRequested={progress?.helpRequestedAt != null}
+              onClose={onClose}
+            />
           ) : (
             <button
               type="button"

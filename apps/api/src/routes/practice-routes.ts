@@ -49,6 +49,18 @@ export function createPracticeRouter(): Router {
     },
   );
 
+  router.post(
+    "/:id/practice/request-help",
+    validateParams(practiceObjectiveParamsSchema),
+    async (req, res) => {
+      const progress = await practiceService.requestPracticeHelp(
+        getAuth(req),
+        String(req.params.id),
+      );
+      res.json(practiceProgressResponseSchema.parse({ progress }));
+    },
+  );
+
   router.get(
     "/:id/practice/progress",
     validateParams(practiceObjectiveParamsSchema),

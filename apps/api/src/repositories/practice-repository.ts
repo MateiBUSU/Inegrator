@@ -21,6 +21,7 @@ export interface ObjectiveProgressRecord {
   attemptsCount: number;
   strategiesTried: ExplanationStrategy[];
   currentExplanation: string | null;
+  helpRequestedAt: Date | null;
   updatedAt: Date;
 }
 
@@ -45,6 +46,7 @@ const progressSelect = {
   attemptsCount: true,
   strategiesTried: true,
   currentExplanation: true,
+  helpRequestedAt: true,
   updatedAt: true,
 } as const;
 
@@ -249,4 +251,19 @@ export function listProgressForStudents(
     where: { studentId: { in: [...studentIds] }, objectiveId: { in: [...objectiveIds] } },
     select: { ...progressSelect, studentId: true },
   });
+}
+
+/**
+ * Sets help_requested_at once: a second request keeps the first timestamp. Returns the row, or
+ * null if the student has no progress row.
+ */
+export async function markHelpRequested(
+  studentId: string,
+  objectiveId: string,
+): Promise<ObjectiveProgressRecord | null> {
+  await prisma.objectiveProgress.updateMany({
+    where: { studentId, objectiveId, helpRequestedAt: null },
+    data: { helpRequestedAt: new Date() },
+  });
+  return findProgress(studentId, objectiveId);
 }
