@@ -9,6 +9,7 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:seed": "tsx --env-file-if-exists=.env prisma/seed.ts",
+    "db:cleanup-test-data": "tsx --env-file-if-exists=.env prisma/cleanup-test-data.ts",
     "db:check": "tsx --env-file-if-exists=.env prisma/db-check.ts"
   },
   "dependencies": {
