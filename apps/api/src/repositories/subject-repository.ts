@@ -42,3 +42,23 @@ export function findSubjectById(id: string): Promise<SubjectRecord | null> {
 export function findChapterById(id: string): Promise<{ id: string; subjectId: string } | null> {
   return prisma.chapter.findUnique({ where: { id }, select: { id: true, subjectId: true } });
 }
+
+export interface ChapterWithObjectives {
+  id: string;
+  subjectId: string;
+  title: string;
+  objectives: { id: string; text: string }[];
+}
+
+/** A chapter with all of its (chapter-scoped) objectives, ordered by code. */
+export function findChapterWithObjectives(id: string): Promise<ChapterWithObjectives | null> {
+  return prisma.chapter.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      subjectId: true,
+      title: true,
+      objectives: { orderBy: { code: "asc" }, select: { id: true, text: true } },
+    },
+  });
+}

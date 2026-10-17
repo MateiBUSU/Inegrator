@@ -51,7 +51,7 @@ function conflict(code: string, message: string, details?: Record<string, unknow
   return new HttpError(409, code, message, details);
 }
 
-function toTeacherMaterial(record: MaterialRecord): TeacherMaterial {
+export function toTeacherMaterial(record: MaterialRecord): TeacherMaterial {
   return {
     ...definitionOf(record),
     id: record.id,

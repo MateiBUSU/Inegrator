@@ -9,6 +9,8 @@ export default defineConfig({
       DATABASE_URL: "postgresql://test:test@localhost:5432/test",
       JWT_SECRET: "test-jwt-secret-test-jwt-secret-1234567890",
       TEACHER_SECRET: "test-teacher-secret",
+      // Small daily quota so the quota tests are quick. AI_PROVIDER is left unset: mock.
+      AI_DAILY_LIMIT_PER_TEACHER: "3",
     },
   },
 });

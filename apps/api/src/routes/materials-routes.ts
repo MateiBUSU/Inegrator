@@ -1,5 +1,8 @@
 import { Router } from "express";
 import {
+  generateMaterialRequestSchema,
+  generateMaterialResponseSchema,
+  type GenerateMaterialRequest,
   assignMaterialRequestSchema,
   assignMaterialResponseSchema,
   confirmQuestionsRequestSchema,
@@ -15,7 +18,9 @@ import {
   type UpdateMaterialRequest,
 } from "@app/shared";
 import { getAuth, requireAuth, requireRole } from "../middleware/auth";
+import { createGenerationRateLimiter } from "../middleware/rate-limit";
 import { validateBody, validateParams, validateQuery } from "../middleware/validate";
+import * as generationService from "../services/generation-service";
 import * as materialService from "../services/material-service";
 
 // Identity comes from the session only. Teacher responses are parsed through the full-content
@@ -45,6 +50,22 @@ export function createMaterialsRouter(): Router {
         req.body as CreateMaterialRequest,
       );
       res.status(201).json(teacherMaterialResponseSchema.parse({ material }));
+    },
+  );
+
+  // Registered before the "/:id" routes. Per-router limiter instance: fresh counters per app.
+  const generationLimiter = createGenerationRateLimiter();
+  router.post(
+    "/generate",
+    requireRole("teacher"),
+    generationLimiter,
+    validateBody(generateMaterialRequestSchema, { includeIssues: true }),
+    async (req, res) => {
+      const result = await generationService.generateMaterial(
+        getAuth(req),
+        req.body as GenerateMaterialRequest,
+      );
+      res.status(201).json(generateMaterialResponseSchema.parse(result));
     },
   );
 

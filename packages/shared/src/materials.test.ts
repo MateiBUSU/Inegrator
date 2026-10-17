@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  createMaterialRequestSchema,
   materialDefinitionSchema,
   questionSchema,
   toStudentMaterialView,
@@ -249,5 +250,36 @@ describe("toStudentMaterialView", () => {
     expect(raw).not.toContain("std::cin>>a>>b");
     expect(raw).not.toContain("Citește două numere; afișează suma");
     expect(raw).not.toContain("while verifică condiția");
+  });
+});
+
+describe("generation metadata", () => {
+  const generation = { provider: "mock", teacherSource: true };
+
+  it("is accepted on a stored definition but never shown in the student view", () => {
+    const definition = materialDefinitionSchema.parse({ ...test, generation });
+    expect(definition.generation).toEqual(generation);
+    const view = toStudentMaterialView({
+      ...definition,
+      id: "123e4567-e89b-42d3-a456-426614174000",
+      version: 1,
+    });
+    expect(collectKeys(JSON.parse(JSON.stringify(view))).has("generation")).toBe(false);
+  });
+
+  it("cannot be injected by a client through create or update requests", () => {
+    const created = createMaterialRequestSchema.parse({ ...test, generation });
+    expect(created).not.toHaveProperty("generation");
+    const updated = updateMaterialRequestSchema.parse({ title: "Nou", generation });
+    expect(updated).not.toHaveProperty("generation");
+  });
+
+  it("rejects an unknown provider name", () => {
+    expect(
+      materialDefinitionSchema.safeParse({
+        ...test,
+        generation: { provider: "other", teacherSource: true },
+      }).success,
+    ).toBe(false);
   });
 });

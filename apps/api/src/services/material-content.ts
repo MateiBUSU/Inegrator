@@ -17,6 +17,7 @@ export function contentOf(def: MaterialDefinition): MaterialContent {
     objectives: def.objectives,
     ...(def.lesson ? { lesson: def.lesson } : {}),
     ...(def.questions ? { questions: def.questions } : {}),
+    ...(def.generation ? { generation: def.generation } : {}),
   };
 }
 

@@ -16,7 +16,7 @@ export type Verification = z.infer<typeof verificationSchema>;
 
 const text = safeText;
 
-const idSchema = z.string().regex(/^[A-Za-z0-9_.-]{1,64}$/, "invalid id");
+export const idSchema = z.string().regex(/^[A-Za-z0-9_.-]{1,64}$/, "invalid id");
 
 const optionSchema = z.object({ id: idSchema, text: text(1000).min(1) });
 
@@ -80,7 +80,7 @@ export type Question = z.infer<typeof questionSchema>;
 // Material
 // ---------------------------------------------------------------------------
 
-const lessonSchema = z.object({
+export const lessonSchema = z.object({
   body: text(50000).min(1), // markdown
   examples: z
     .array(z.object({ title: text(200).min(1), body: text(10000).min(1) }))
@@ -97,6 +97,11 @@ const contentShape = {
   objectives: z.array(objectiveRefSchema).min(1).max(30),
   lesson: lessonSchema.optional(),
   questions: z.array(questionSchema).max(100).optional(),
+  // Set by the generation endpoint only (never accepted from clients); useful for debugging
+  // and never part of the student view.
+  generation: z
+    .object({ provider: z.enum(["mock", "gemini"]), teacherSource: z.boolean() })
+    .optional(),
 };
 
 /** What is stored in materials.content (title and kind are separate columns). */
@@ -161,6 +166,7 @@ export const materialDefinitionSchema = definitionBaseSchema.superRefine(refineD
 export type MaterialDefinition = z.infer<typeof materialDefinitionSchema>;
 
 export const createMaterialRequestSchema = definitionBaseSchema
+  .omit({ generation: true })
   .extend({ subjectId: z.uuid().optional(), chapterId: z.uuid().optional() })
   .superRefine(refineDefinition);
 export type CreateMaterialRequest = z.infer<typeof createMaterialRequestSchema>;
@@ -168,7 +174,7 @@ export type CreateMaterialRequest = z.infer<typeof createMaterialRequestSchema>;
 // Partial update; the result is merged with the stored draft and re-validated as a whole.
 // `kind` cannot change after creation.
 export const updateMaterialRequestSchema = definitionBaseSchema
-  .omit({ kind: true })
+  .omit({ kind: true, generation: true })
   .partial()
   .extend({ subjectId: z.uuid().nullable().optional(), chapterId: z.uuid().nullable().optional() })
   .refine((body) => Object.keys(body).length > 0, "empty update");
@@ -256,13 +262,15 @@ export const subjectsResponseSchema = z.object({
 // Student view: the answer key never leaves the backend before submission.
 // ---------------------------------------------------------------------------
 
-const studentQuestionSchema = z.object({
+export const studentQuestionSchema = z.object({
   id: idSchema,
   type: questionTypeSchema,
   prompt: z.string(),
   options: z.array(z.object({ id: idSchema, text: z.string() })).optional(),
   objectiveId: idSchema,
 });
+
+export type StudentQuestion = z.infer<typeof studentQuestionSchema>;
 
 export const studentMaterialViewSchema = z.object({
   id: z.uuid(),

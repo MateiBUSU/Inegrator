@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+const emptyToUndefined = (value: unknown) => (value === "" ? undefined : value);
+
 const envSchema = z
   .object({
     PORT: z.coerce.number().int().min(1).max(65535).default(3001),
@@ -16,8 +18,22 @@ const envSchema = z
     // Number of reverse-proxy hops in front of the API (0 = none). Needed for correct client IPs
     // in rate limiting when deployed behind a proxy; never "true", which lets clients spoof IPs.
     TRUST_PROXY: z.coerce.number().int().min(0).max(10).default(0),
+    // AI engine. The mock provider is the default and needs no network or key; Gemini is opt-in.
+    AI_PROVIDER: z.enum(["mock", "gemini"]).default("mock"),
+    // An empty value (as in a copied .env.example) counts as unset.
+    GEMINI_API_KEY: z.preprocess(emptyToUndefined, z.string().min(1).optional()),
+    GEMINI_MODEL: z.preprocess(emptyToUndefined, z.string().min(1).default("gemini-3.8-flash")),
+    // Generations (and style-notes suggestions) each teacher may request per UTC day.
+    AI_DAILY_LIMIT_PER_TEACHER: z.coerce.number().int().min(0).max(10_000).default(20),
   })
   .superRefine((value, ctx) => {
+    if (value.AI_PROVIDER === "gemini" && !value.GEMINI_API_KEY) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["GEMINI_API_KEY"],
+        message: "required when AI_PROVIDER=gemini",
+      });
+    }
     if (value.NODE_ENV !== "production") return;
     for (const key of ["JWT_SECRET", "TEACHER_SECRET"] as const) {
       if (value[key].startsWith("change-me")) {

@@ -6,13 +6,16 @@ import {
   documentListResponseSchema,
   documentResponseSchema,
   styleNotesResponseSchema,
+  styleNotesSuggestionResponseSchema,
   updateStyleNotesRequestSchema,
   type CreateDocumentRequest,
   type UpdateStyleNotesRequest,
 } from "@app/shared";
 import { getAuth, requireAuth, requireRole } from "../middleware/auth";
+import { createGenerationRateLimiter } from "../middleware/rate-limit";
 import { validateBody, validateParams } from "../middleware/validate";
 import * as documentService from "../services/document-service";
+import * as generationService from "../services/generation-service";
 
 const DOCUMENT_BODY_LIMIT = "1mb";
 
@@ -70,6 +73,21 @@ export function createClassDocumentsRouter(): Router {
       res.json(
         styleNotesResponseSchema.parse({ class_id: saved.classId, style_notes: saved.styleNotes }),
       );
+    },
+  );
+
+  // Suggests style notes from the class's documents. Returns the suggestion only; it is NOT
+  // saved. The teacher saves it, if they accept it, with PATCH /:id/style-notes. No body needed.
+  const generationLimiter = createGenerationRateLimiter();
+  router.post(
+    "/:id/style-notes/extract",
+    requireAuth,
+    requireRole("teacher"),
+    generationLimiter,
+    validateParams(classIdParamsSchema),
+    async (req, res) => {
+      const result = await generationService.suggestStyleNotes(getAuth(req), String(req.params.id));
+      res.json(styleNotesSuggestionResponseSchema.parse(result));
     },
   );
 

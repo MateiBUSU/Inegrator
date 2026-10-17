@@ -87,8 +87,23 @@ export async function deleteDocument(id: string): Promise<boolean> {
   return result.count === 1;
 }
 
+/** Which of these document ids belong to this class. */
+export async function findDocumentIdsInClass(
+  classId: string,
+  documentIds: string[],
+): Promise<string[]> {
+  const rows = await prisma.teacherDocument.findMany({
+    where: { classId, id: { in: documentIds } },
+    select: { id: true },
+  });
+  return rows.map((row) => row.id);
+}
+
 /** Every chunk of the documents of this class, and only this class. */
-export async function listChunksForClass(classId: string): Promise<ClassChunkRecord[]> {
+export async function listChunksForClass(
+  classId: string,
+  options: { take?: number } = {},
+): Promise<ClassChunkRecord[]> {
   const rows = await prisma.documentChunk.findMany({
     where: { document: { classId } },
     select: {
@@ -97,7 +112,9 @@ export async function listChunksForClass(classId: string): Promise<ClassChunkRec
       text: true,
       document: { select: { classId: true, createdAt: true } },
     },
-    orderBy: [{ documentId: "asc" }, { position: "asc" }],
+    // Document order (oldest first), then position: also what "the first N chunks" means.
+    orderBy: [{ document: { createdAt: "asc" } }, { documentId: "asc" }, { position: "asc" }],
+    ...(options.take !== undefined ? { take: options.take } : {}),
   });
   return rows.map((row) => ({
     classId: row.document.classId,

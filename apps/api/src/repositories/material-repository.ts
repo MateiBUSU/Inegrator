@@ -48,13 +48,17 @@ export async function createMaterial(data: {
   content: unknown;
   version?: number;
   parentId?: string | null;
+  /** Defaults to "manual". AI generation passes "ai" or "document_based". */
+  source?: "manual" | "ai" | "document_based";
+  basedOnDocumentIds?: string[];
 }): Promise<MaterialRecord> {
   try {
     return await prisma.material.create({
       data: {
         ownerId: data.ownerId,
         scope: "class",
-        source: "manual",
+        source: data.source ?? "manual",
+        basedOnDocumentIds: data.basedOnDocumentIds ?? [],
         status: "draft",
         kind: data.kind,
         title: data.title,

@@ -7,6 +7,8 @@ export interface ClassRecord {
   name: string;
   grade: number;
   joinCode: string;
+  /** The teacher's style notes, read straight from the classes table. */
+  styleNotes: string | null;
   createdAt: Date;
   teacher: { displayName: string };
 }

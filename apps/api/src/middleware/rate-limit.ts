@@ -37,6 +37,18 @@ export function createJoinRateLimiter(): RequestHandler {
   });
 }
 
+/**
+ * Burst limit for AI endpoints (the daily quota is the real budget). Keyed per signed-in user,
+ * every request counts; must run after requireAuth.
+ */
+export function createGenerationRateLimiter(): RequestHandler {
+  return limiter({
+    windowMs: 60 * 1000,
+    limit: 10,
+    keyGenerator: (req) => req.auth?.userId ?? ipKeyGenerator(req.ip ?? "unknown"),
+  });
+}
+
 /** Each call creates fresh in-memory counters (one set per app instance). */
 export function createAuthRateLimiters(): { login: RequestHandler; register: RequestHandler } {
   return {
