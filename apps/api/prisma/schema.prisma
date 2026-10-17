@@ -340,6 +340,7 @@ model ObjectiveStat {
   attempts        Int       @default(0)
   correct         Int       @default(0)
   hintsUsed       Int       @default(0) @map("hints_used")
+  confidence      Float     @default(0)
   lastPracticedAt DateTime? @map("last_practiced_at") @db.Timestamptz(6)
   updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
 
