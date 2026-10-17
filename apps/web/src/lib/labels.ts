@@ -63,3 +63,19 @@ export function policySummary(policy: {
     `Indicii: ${policy.hintsEnabled ? "da" : "nu"}`,
   ].join(" · ");
 }
+
+// Adaptive practice on class objectives.
+export const OBJECTIVE_STATUS_LABELS = {
+  not_started: "Neînceput",
+  struggling: "În lucru",
+  mastered: "Stăpânit",
+} as const;
+
+export const STRATEGY_LABELS = {
+  ANALOGIE: "Analogie",
+  PAS_CU_PAS: "Pas cu pas",
+  EXEMPLU_LUCRAT: "Exemplu lucrat",
+  EXPLICATIE_VIZUALA: "Explicație vizuală",
+  PARCURGERE_COD: "Parcurgere de cod",
+  INTREBARE_SOCRATICA: "Întrebări ghidate",
+} as const;

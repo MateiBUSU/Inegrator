@@ -4,6 +4,7 @@ import { api, userMessage } from "../api";
 import { gradeLabel, KIND_LABELS, LANGUAGE_LABELS, SECTION_LABELS } from "../lib/labels";
 import { AttemptSection } from "./attempt-section";
 import { ProgressBadge } from "./badges";
+import { ObjectiveList } from "./objective-list";
 import { EmptyState } from "./empty-state";
 import { ErrorState } from "./error-state";
 import { SafeMarkdown } from "./safe-markdown";
@@ -64,14 +65,7 @@ export function StudentMaterialScreen({ material, initialStatus }: StudentMateri
           {LANGUAGE_LABELS[material.language]} · {gradeLabel(material.grade)}{" "}
           {isLesson ? <ProgressBadge state={status ?? "not_started"} /> : null}
         </p>
-        <details>
-          <summary>Obiective ({material.objectives.length})</summary>
-          <ul>
-            {material.objectives.map((objective) => (
-              <li key={objective.id}>{objective.text}</li>
-            ))}
-          </ul>
-        </details>
+        <ObjectiveList objectives={material.objectives} />
       </header>
 
       {material.lesson ? (

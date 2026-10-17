@@ -261,6 +261,14 @@
     @apply bg-primary-soft text-primary;
   }
 
+  .badge-objective-mastered {
+    @apply bg-success-soft text-success-ink;
+  }
+
+  .badge-objective-struggling {
+    @apply bg-warning-soft text-warning-ink;
+  }
+
   .badge-unconfirmed,
   .badge-draft {
     @apply bg-warning-soft text-warning-ink;

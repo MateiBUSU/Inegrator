@@ -9,6 +9,7 @@ import { RegisterPage } from "./pages/register-page";
 import { StudentClassDetailPage } from "./pages/student-class-detail-page";
 import { StudentClassesPage } from "./pages/student-classes-page";
 import { StudentMaterialPage } from "./pages/student-material-page";
+import { StudentPracticePage } from "./pages/student-practice-page";
 import { StudentProgressPage } from "./pages/student-progress-page";
 import { StudentTopicDetailPage } from "./pages/student-topic-detail-page";
 import { StudentTopicMaterialPage } from "./pages/student-topic-material-page";
@@ -53,6 +54,7 @@ export function App() {
               path="student/topics/:id/materials/:materialId"
               element={<StudentTopicMaterialPage />}
             />
+            <Route path="student/objectives/:id/practice" element={<StudentPracticePage />} />
             <Route path="student/progress" element={<StudentProgressPage />} />
           </Route>
         </Route>
