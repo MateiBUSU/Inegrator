@@ -10,15 +10,27 @@ export interface ActivityFacts {
   answers: { correct: number; incorrect: number };
 }
 
+// Points, streaks and goals count CLASS activity only. Personal practice (a student's own AI
+// generated topics) stays private: it must not show up in a teacher's view of a student, and it
+// must not be farmable by generating and re-submitting unlimited AI quizzes.
+const classMaterial = { scope: "class" } as const;
+
 export async function loadActivityFacts(studentId: string): Promise<ActivityFacts> {
   const [attempts, lessons, correct, incorrect] = await Promise.all([
-    prisma.quizAttempt.findMany({ where: { studentId }, select: { submittedAt: true } }),
+    prisma.quizAttempt.findMany({
+      where: { studentId, material: classMaterial },
+      select: { submittedAt: true },
+    }),
     prisma.lessonProgress.findMany({
-      where: { studentId },
+      where: { studentId, material: classMaterial },
       select: { status: true, updatedAt: true },
     }),
-    prisma.attemptAnswer.count({ where: { isCorrect: true, attempt: { studentId } } }),
-    prisma.attemptAnswer.count({ where: { isCorrect: false, attempt: { studentId } } }),
+    prisma.attemptAnswer.count({
+      where: { isCorrect: true, attempt: { studentId, material: classMaterial } },
+    }),
+    prisma.attemptAnswer.count({
+      where: { isCorrect: false, attempt: { studentId, material: classMaterial } },
+    }),
   ]);
   return {
     attemptDates: attempts.map((a) => a.submittedAt),

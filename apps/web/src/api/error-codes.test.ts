@@ -21,7 +21,9 @@ function sourceFiles(dir: string): string[] {
 // every such literal outside config/ (which only holds environment variable names) means a new
 // code is caught however it is raised.
 const CODE_LITERAL = /"([A-Z]+(?:_[A-Z]+)+)"/g;
-const NOT_ERROR_CODES = new Set<string>(); // add a literal here only if it is not an error code
+// Add a literal here only if it is not an error code. These two are adaptive-policy reason codes
+// stored in student_policies, never sent as errors.
+const NOT_ERROR_CODES = new Set<string>(["HIGH_ACCURACY", "REPEATED_OBJECTIVE_ERRORS"]);
 
 function emittedCodes(): string[] {
   const codes = new Set<string>();

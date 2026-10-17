@@ -29,6 +29,8 @@ export interface MaterialRecord {
   source: "manual" | "ai" | "document_based";
   subjectId: string | null;
   chapterId: string | null;
+  /** Set only for personal materials. */
+  topicId: string | null;
   /** Validated by the service layer; stored as jsonb. */
   content: unknown;
   version: number;
@@ -102,7 +104,13 @@ export async function updateDraftIf(
   data: { title: string; subjectId: string | null; chapterId: string | null; content: unknown },
 ): Promise<boolean> {
   const result = await prisma.material.updateMany({
-    where: { id, ownerId, status: "draft", content: { equals: toJson(expectedContent) } },
+    where: {
+      id,
+      ownerId,
+      scope: "class",
+      status: "draft",
+      content: { equals: toJson(expectedContent) },
+    },
     data: {
       title: data.title,
       subjectId: data.subjectId,
@@ -121,7 +129,13 @@ export async function publishIf(
   publishedAt: Date,
 ): Promise<boolean> {
   const result = await prisma.material.updateMany({
-    where: { id, ownerId, status: "draft", content: { equals: toJson(expectedContent) } },
+    where: {
+      id,
+      ownerId,
+      scope: "class",
+      status: "draft",
+      content: { equals: toJson(expectedContent) },
+    },
     data: { status: "published", publishedAt },
   });
   return result.count === 1;

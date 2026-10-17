@@ -7,11 +7,11 @@ import {
 import { AiUnavailableError, getAiEngine, type Objective } from "../ai";
 import { env } from "../config/env";
 import { HttpError } from "../middleware/error-handler";
-import { tryConsumeAiQuota } from "../repositories/ai-usage-repository";
 import { findClassById, type ClassRecord } from "../repositories/class-repository";
 import { findDocumentIdsInClass, listChunksForClass } from "../repositories/document-repository";
 import { createMaterial } from "../repositories/material-repository";
 import { findChapterWithObjectives, findSubjectById } from "../repositories/subject-repository";
+import { consumeAiQuota } from "./ai-quota";
 import { contentOf, reconcileVerification } from "./material-content";
 import { toTeacherMaterial } from "./material-service";
 import { retrieveChunks } from "./retrieval";
@@ -51,30 +51,16 @@ async function loadOwnedClass(auth: AuthContext, classId: string): Promise<Class
   return found;
 }
 
-/** The current UTC day as YYYY-MM-DD: the key of the daily quota. */
-export function utcDay(date: Date = new Date()): string {
-  return date.toISOString().slice(0, 10);
-}
+export { utcDay } from "./ai-quota";
 
 /**
- * Consumes one unit of the teacher's daily AI quota, atomically (see tryConsumeAiQuota).
- * Lesson/quiz generation and style-notes suggestions share ONE counter: the quota exists to bound
- * AI cost per teacher, and every AI call costs about the same, so a single budget is simpler for
- * teachers to understand. A call that fails after this point (e.g. AI unavailable) still counts:
- * the budget caps attempts, not successes.
+ * Consumes one unit of the teacher's daily AI quota (see consumeAiQuota). Lesson/quiz generation
+ * and style-notes suggestions share ONE counter: the quota exists to bound AI cost per teacher,
+ * and every AI call costs about the same, so a single budget is simpler for teachers to
+ * understand.
  */
-async function consumeQuota(auth: AuthContext): Promise<{ used: number; limit: number }> {
-  const limit = env.AI_DAILY_LIMIT_PER_TEACHER;
-  const used = await tryConsumeAiQuota(auth.userId, utcDay(), limit);
-  if (used === null) {
-    throw new HttpError(
-      429,
-      "QUOTA_EXCEEDED",
-      "Ai atins limita zilnică de generări cu AI. Încearcă din nou mâine.",
-      { limit },
-    );
-  }
-  return { used, limit };
+function consumeQuota(auth: AuthContext): Promise<{ used: number; limit: number }> {
+  return consumeAiQuota(auth.userId, env.AI_DAILY_LIMIT_PER_TEACHER);
 }
 
 function clip(text: string, max: number): string {

@@ -5,12 +5,14 @@ import type {
   QuizInput,
   SolveInput,
   StyleNotesInput,
+  TutorInput,
 } from "./generator";
 import {
   buildLessonPrompt,
   buildQuizPrompt,
   buildSolvePrompt,
   buildStyleNotesPrompt,
+  buildTutorPrompt,
   type Prompt,
 } from "./prompts";
 
@@ -74,5 +76,9 @@ export class GeminiGenerator implements ContentGenerator {
 
   solveQuestions(input: SolveInput): Promise<unknown> {
     return this.callJson(buildSolvePrompt(input));
+  }
+
+  tutorReply(input: TutorInput): Promise<unknown> {
+    return this.callJson(buildTutorPrompt(input));
   }
 }

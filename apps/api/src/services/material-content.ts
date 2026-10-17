@@ -2,6 +2,7 @@ import {
   allQuestions,
   materialContentSchema,
   materialDefinitionSchema,
+  personalContentSchema,
   type MaterialContent,
   type MaterialDefinition,
   type Question,
@@ -25,6 +26,21 @@ export function contentOf(def: MaterialDefinition): MaterialContent {
 export function definitionOf(record: MaterialRecord): MaterialDefinition {
   const content = materialContentSchema.parse(record.content);
   return materialDefinitionSchema.parse({ title: record.title, kind: record.kind, ...content });
+}
+
+/** What scoring needs from a material: its questions, class or personal alike. */
+export type ScorableMaterial = Pick<MaterialDefinition, "lesson" | "questions">;
+
+/**
+ * The questions of any stored material. Class materials are re-validated as full definitions;
+ * personal ones have their own content shape (no section, language or grade).
+ */
+export function scorableOf(record: MaterialRecord): ScorableMaterial {
+  if (record.scope === "personal") {
+    const { lesson, questions } = personalContentSchema.parse(record.content);
+    return { ...(lesson ? { lesson } : {}), ...(questions ? { questions } : {}) };
+  }
+  return definitionOf(record);
 }
 
 function mapQuestions(def: MaterialDefinition, fn: (q: Question) => Question): MaterialDefinition {

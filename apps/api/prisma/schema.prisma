@@ -264,7 +264,7 @@ model Material {
   owner           User                 @relation(fields: [ownerId], references: [id])
   subject         Subject?             @relation(fields: [subjectId], references: [id])
   chapter         Chapter?             @relation(fields: [chapterId], references: [id])
-  topic           LearningTopic?       @relation(fields: [topicId], references: [id])
+  topic           LearningTopic?       @relation(fields: [topicId], references: [id], onDelete: Cascade)
   parent          Material?            @relation("MaterialVersions", fields: [parentId], references: [id])
   children        Material[]           @relation("MaterialVersions")
   assignments     MaterialAssignment[]
@@ -363,10 +363,12 @@ model StudentPolicy {
   scaffolding      String // low | medium | high
   hintsEnabled     Boolean  @map("hints_enabled")
   reasonCode       String?  @map("reason_code")
+  // Human-readable explanation of the change, with the numbers that triggered it.
+  note             String?
   createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
   student User           @relation(fields: [studentId], references: [id])
-  topic   LearningTopic? @relation(fields: [topicId], references: [id])
+  topic   LearningTopic? @relation(fields: [topicId], references: [id], onDelete: Cascade)
 
   @@unique([studentId, topicId, version])
   @@index([studentId, topicId])

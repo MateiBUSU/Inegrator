@@ -15,6 +15,7 @@ export default defineConfig({
       TEACHER_SECRET: "test-teacher-secret",
       // Small daily quota so the quota tests are quick. AI_PROVIDER is left unset: mock.
       AI_DAILY_LIMIT_PER_TEACHER: "3",
+      AI_DAILY_LIMIT_PER_STUDENT: "3",
     },
   },
 });

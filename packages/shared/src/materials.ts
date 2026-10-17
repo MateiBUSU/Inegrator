@@ -20,7 +20,7 @@ export const idSchema = z.string().regex(/^[A-Za-z0-9_.-]{1,64}$/, "invalid id")
 
 const optionSchema = z.object({ id: idSchema, text: text(1000).min(1) });
 
-const objectiveRefSchema = z.object({ id: idSchema, text: text(500).min(1) });
+export const objectiveRefSchema = z.object({ id: idSchema, text: text(500).min(1) });
 
 // ---------------------------------------------------------------------------
 // Question
@@ -306,7 +306,7 @@ export const studentMaterialResponseSchema = z.object({ material: studentMateria
 
 // Whitelist, not blacklist: only listed fields are copied, so correct, acceptedAnswers,
 // referenceSolution, rubric, explanation and verification can never leak through.
-function toStudentQuestion(q: Question): z.input<typeof studentQuestionSchema> {
+export function toStudentQuestion(q: Question): z.input<typeof studentQuestionSchema> {
   return {
     id: q.id,
     type: q.type,

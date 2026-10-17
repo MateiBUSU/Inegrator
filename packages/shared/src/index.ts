@@ -6,5 +6,6 @@ export * from "./documents";
 export * from "./gamification";
 export * from "./health";
 export * from "./materials";
+export * from "./personal";
 export * from "./policy";
 export * from "./safe-text";

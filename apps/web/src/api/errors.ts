@@ -41,6 +41,11 @@ const MESSAGES: Record<string, string> = {
   VERSION_EXISTS: "Există deja o versiune nouă a acestui material.",
   INVALID_SUBJECT: "Subiectul sau capitolul ales nu este valid.",
   INVALID_OBJECTIVES: "Unele obiective nu aparțin capitolului ales.",
+  // personal learning space
+  TOPIC_NOT_FOUND: "Subiectul nu a fost găsit.",
+  TOPIC_LIMIT_REACHED: "Ai atins numărul maxim de subiecte. Șterge unul pentru a adăuga altul.",
+  TOPIC_NOT_READY: "Subiectul nu are un obiectiv de învățare.",
+
   // AI
   QUOTA_EXCEEDED: "Ai atins limita zilnică de generări cu AI. Încearcă din nou mâine.",
   AI_UNAVAILABLE: "Generarea cu AI nu este disponibilă momentan. Încearcă mai târziu.",

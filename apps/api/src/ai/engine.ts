@@ -3,11 +3,13 @@ import {
   generatedQuizSchema,
   solvedQuestionsSchema,
   styleNotesSuggestionSchema,
+  tutorReplySchema,
   type GeneratedLesson,
   type GeneratedQuiz,
   type Question,
   type SolvedQuestions,
   type StyleNotesSuggestion,
+  type TutorReply,
 } from "@app/shared";
 import { AiUnavailableError } from "./errors";
 import type {
@@ -17,10 +19,11 @@ import type {
   QuizInput,
   SolveInput,
   StyleNotesInput,
+  TutorInput,
 } from "./generator";
 
 /**
- * What the rest of the app uses: the same four operations as a provider, but every result is
+ * What the rest of the app uses: the same operations as a provider, but every result is
  * validated with the shared zod schemas first. Nothing unvalidated leaves this module.
  */
 export interface AiEngine {
@@ -29,6 +32,7 @@ export interface AiEngine {
   generateQuiz(input: QuizInput): Promise<GeneratedQuiz>;
   extractStyleNotes(input: StyleNotesInput): Promise<StyleNotesSuggestion>;
   solveQuestions(input: SolveInput): Promise<SolvedQuestions>;
+  tutorReply(input: TutorInput): Promise<TutorReply>;
 }
 
 const MAX_ATTEMPTS = 2; // the first call plus exactly one retry with the same input
@@ -124,6 +128,13 @@ export function createAiEngine(provider: ContentGenerator): AiEngine {
           }
           return parsed;
         },
+      ),
+
+    tutorReply: (input) =>
+      validatedCall(
+        provider.provider,
+        () => provider.tutorReply(input),
+        (raw) => tutorReplySchema.parse(raw),
       ),
   };
 }

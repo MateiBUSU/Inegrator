@@ -229,6 +229,7 @@ function capturing(overrides: Partial<ContentGenerator> = {}) {
       return mock.extractStyleNotes(input);
     },
     solveQuestions: (input) => mock.solveQuestions(input),
+    tutorReply: (input) => mock.tutorReply(input),
     ...overrides,
   };
   return { provider, seen };

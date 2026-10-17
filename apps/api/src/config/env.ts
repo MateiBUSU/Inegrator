@@ -25,6 +25,9 @@ const envSchema = z
     GEMINI_MODEL: z.preprocess(emptyToUndefined, z.string().min(1).default("gemini-3.8-flash")),
     // Generations (and style-notes suggestions) each teacher may request per UTC day.
     AI_DAILY_LIMIT_PER_TEACHER: z.coerce.number().int().min(0).max(10_000).default(20),
+    // AI calls (personal lessons, quizzes and tutor replies) each student may make per UTC day,
+    // on the same ai_usage counter.
+    AI_DAILY_LIMIT_PER_STUDENT: z.coerce.number().int().min(0).max(10_000).default(30),
   })
   .superRefine((value, ctx) => {
     if (value.AI_PROVIDER === "gemini" && !value.GEMINI_API_KEY) {

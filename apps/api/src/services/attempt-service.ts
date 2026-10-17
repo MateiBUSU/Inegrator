@@ -13,7 +13,8 @@ import {
   type AttemptRecord,
 } from "../repositories/attempt-repository";
 import { findMaterialById, isAssignedToStudent } from "../repositories/material-repository";
-import { definitionOf } from "./material-content";
+import { afterPersonalAttempt } from "./adaptation-service";
+import { scorableOf } from "./material-content";
 import { scoreAttempt, type ScoredAttempt } from "./scoring";
 import type { AuthContext } from "./token-service";
 
@@ -44,8 +45,9 @@ function toResult(attempt: AttemptRecord, scored: ScoredAttempt): AttemptResult 
 }
 
 /**
- * Scores and stores one attempt. The material must be published and assigned to a class the
- * student is enrolled in; the score comes only from the confirmed answer key stored server-side.
+ * Scores and stores one attempt. A class material must be published and assigned to a class the
+ * student is enrolled in; a personal material must be the student's own. The score comes only
+ * from the answer key stored server-side.
  */
 export async function submitAttempt(
   auth: AuthContext,
@@ -54,12 +56,17 @@ export async function submitAttempt(
 ): Promise<AttemptResult> {
   assertStudent(auth);
   const record = await findMaterialById(materialId);
-  if (!record || record.scope !== "class" || record.status !== "published") {
-    throw materialNotFound();
+  if (!record) throw materialNotFound();
+  const personal = record.scope === "personal";
+  if (personal) {
+    // Personal materials have no status or assignment: ownership is the whole rule.
+    if (record.ownerId !== auth.userId) throw materialNotFound();
+  } else {
+    if (record.status !== "published") throw materialNotFound();
+    if (!(await isAssignedToStudent(record.id, auth.userId))) throw materialNotFound();
   }
-  if (!(await isAssignedToStudent(record.id, auth.userId))) throw materialNotFound();
 
-  const material = definitionOf(record);
+  const material = scorableOf(record);
   const questions = allQuestions(material);
   const known = new Set(questions.map((q) => q.id));
   const seen = new Set<string>();
@@ -102,6 +109,22 @@ export async function submitAttempt(
     maxScore: scored.maxScore,
     answers: rows,
   });
+
+  // Personal attempts feed objective_stats and the adaptive policy. The attempt is already
+  // saved, so a failure here must not turn the student's submission into an error.
+  if (personal && record.topicId) {
+    try {
+      await afterPersonalAttempt({
+        studentId: auth.userId,
+        topicId: record.topicId,
+        answers: rows,
+      });
+    } catch (err) {
+      console.error(
+        `Adaptive policy update failed: ${err instanceof Error ? err.name : "unknown error"}`,
+      );
+    }
+  }
   return toResult(attempt, scored);
 }
 
@@ -119,5 +142,5 @@ export async function getAttempt(auth: AuthContext, attemptId: string): Promise<
     const value = (row.answer ?? {}) as { optionIds?: string[]; text?: string };
     return { questionId: row.questionId, optionIds: value.optionIds, text: value.text };
   });
-  return toResult(attempt, scoreAttempt(definitionOf(record), stored));
+  return toResult(attempt, scoreAttempt(scorableOf(record), stored));
 }

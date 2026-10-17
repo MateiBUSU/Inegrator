@@ -15,7 +15,10 @@ export interface QuizAttemptRecord {
 }
 
 // Only materials assigned to this class count as progress "in that class".
-const assignedToClass = (classId: string) => ({ assignments: { some: { classId } } });
+const assignedToClass = (classId: string) => ({
+  scope: "class" as const,
+  assignments: { some: { classId } },
+});
 
 export function listLessonProgress(
   classId: string,

@@ -69,7 +69,7 @@ function gradeQuestion(question: Question, answer: SubmittedAnswer | undefined):
  * on the submitted answers. A missing answer to an auto-scored question counts as wrong.
  */
 export function scoreAttempt(
-  material: MaterialDefinition,
+  material: Pick<MaterialDefinition, "lesson" | "questions">,
   answers: readonly SubmittedAnswer[],
 ): ScoredAttempt {
   const byQuestion = new Map(answers.map((answer) => [answer.questionId, answer]));

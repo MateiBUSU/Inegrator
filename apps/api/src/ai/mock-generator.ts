@@ -5,6 +5,7 @@ import type {
   QuizInput,
   SolveInput,
   StyleNotesInput,
+  TutorInput,
 } from "./generator";
 
 // Deterministic provider for development, demos and tests: no network, no randomness, no clock.
@@ -165,6 +166,26 @@ export class MockGenerator implements ContentGenerator {
             ? { questionId: q.id, acceptedAnswer: "mock" }
             : { questionId: q.id, solution: "// soluție mock" },
       ),
+    };
+  }
+
+  async tutorReply(input: TutorInput): Promise<unknown> {
+    const goal = clip(input.topicGoal, 200);
+    const question = clip(input.question, 300);
+    const turns = input.recentMessages.length;
+    return {
+      metadata: { generator: "mock" },
+      reply: [
+        `Răspuns de la tutorele mock pentru obiectivul „${goal}”.`,
+        `Întrebarea ta: „${question}”.`,
+        turns === 0
+          ? "Aceasta este prima întrebare din conversație."
+          : `Am în vedere ultimele ${turns} mesaje din conversație.`,
+        input.policy.exampleFirst
+          ? "Începem cu un exemplu, apoi explicația."
+          : "Începem cu explicația, apoi un exemplu.",
+        "(Răspuns generat de mock; nu este conținut real.)",
+      ].join("\n\n"),
     };
   }
 }
