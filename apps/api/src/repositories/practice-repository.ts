@@ -212,3 +212,41 @@ export function recordPracticeResult(data: {
     return { progress, nextExercise };
   });
 }
+
+// --- teacher side ----------------------------------------------------------------------------
+
+export interface MaterialStudentRecord {
+  studentId: string;
+  displayName: string;
+  className: string;
+}
+
+/** Every student enrolled in a class this material is assigned to (one entry per class). */
+export async function listStudentsOfMaterial(materialId: string): Promise<MaterialStudentRecord[]> {
+  const rows = await prisma.enrollment.findMany({
+    where: { class: { assignments: { some: { materialId } } } },
+    select: {
+      studentId: true,
+      student: { select: { displayName: true } },
+      class: { select: { name: true } },
+    },
+    orderBy: [{ student: { displayName: "asc" } }, { studentId: "asc" }],
+  });
+  return rows.map((row) => ({
+    studentId: row.studentId,
+    displayName: row.student.displayName,
+    className: row.class.name,
+  }));
+}
+
+/** The raw progress rows of these students on these objectives: one row per pair, if any. */
+export function listProgressForStudents(
+  studentIds: readonly string[],
+  objectiveIds: readonly string[],
+): Promise<(ObjectiveProgressRecord & { studentId: string })[]> {
+  if (studentIds.length === 0 || objectiveIds.length === 0) return Promise.resolve([]);
+  return prisma.objectiveProgress.findMany({
+    where: { studentId: { in: [...studentIds] }, objectiveId: { in: [...objectiveIds] } },
+    select: { ...progressSelect, studentId: true },
+  });
+}

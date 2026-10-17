@@ -2,6 +2,7 @@ import {
   assignMaterialResponseSchema,
   generateMaterialResponseSchema,
   materialListResponseSchema,
+  objectiveProgressOverviewResponseSchema,
   studentMaterialResponseSchema,
   subjectsResponseSchema,
   teacherMaterialResponseSchema,
@@ -9,6 +10,7 @@ import {
   type generateMaterialRequestSchema,
   type GenerateMaterialResponse,
   type MaterialSummary,
+  type ObjectiveProgressOverview,
   type Role,
   type StudentMaterialView,
   type TeacherMaterial,
@@ -120,5 +122,12 @@ export function assignMaterial(id: string, classIds: string[]) {
   return request("POST", `${materialPath(id)}/assign`, {
     body: { classIds },
     schema: assignMaterialResponseSchema,
+  });
+}
+
+/** GET /api/materials/:id/objective-progress (teacher): each enrolled student's own practice progress. */
+export function getObjectiveProgress(id: string): Promise<ObjectiveProgressOverview> {
+  return request("GET", `${materialPath(id)}/objective-progress`, {
+    schema: objectiveProgressOverviewResponseSchema,
   });
 }

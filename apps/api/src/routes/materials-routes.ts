@@ -13,6 +13,7 @@ import {
   listMaterialsQuerySchema,
   materialIdParamsSchema,
   materialListResponseSchema,
+  objectiveProgressOverviewResponseSchema,
   studentMaterialResponseSchema,
   subjectsResponseSchema,
   teacherMaterialResponseSchema,
@@ -70,6 +71,20 @@ export function createMaterialsRouter(): Router {
         req.body as GenerateMaterialRequest,
       );
       res.status(201).json(generateMaterialResponseSchema.parse(result));
+    },
+  );
+
+  // Per-student objective progress (practice loop) for the teacher's own material.
+  router.get(
+    "/:id/objective-progress",
+    requireRole("teacher"),
+    validateParams(materialIdParamsSchema),
+    async (req, res) => {
+      const overview = await materialService.getObjectiveProgressOverview(
+        getAuth(req),
+        String(req.params.id),
+      );
+      res.json(objectiveProgressOverviewResponseSchema.parse(overview));
     },
   );
 

@@ -34,6 +34,7 @@ vi.mock("../api", async (importOriginal) => {
         confirmQuestions: mocks.confirmQuestions,
         publishMaterial: mocks.publishMaterial,
         getMaterial: mocks.getMaterial,
+        getObjectiveProgress: async () => ({ objectives: [], students: [] }),
         createNewVersion: mocks.createNewVersion,
         assignMaterial: mocks.assignMaterial,
       },

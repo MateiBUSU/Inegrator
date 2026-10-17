@@ -88,3 +88,26 @@ export const submitPracticeResponseSchema = z.discriminatedUnion("correct", [
   }),
 ]);
 export type SubmitPracticeResponse = z.infer<typeof submitPracticeResponseSchema>;
+
+// --- teacher view: per-student progress on a material's objectives ------------------------------
+
+export const studentObjectiveProgressSchema = z.object({
+  objectiveId: z.uuid(),
+  status: objectiveProgressStatusSchema,
+  attemptsCount: z.number().int(),
+  strategiesTried: z.array(explanationStrategySchema),
+});
+
+/** One entry per enrolled student, never averaged or merged with another student's. */
+export const objectiveProgressOverviewResponseSchema = z.object({
+  objectives: z.array(z.object({ id: z.uuid(), text: z.string() })),
+  students: z.array(
+    z.object({
+      studentId: z.uuid(),
+      displayName: z.string(),
+      classNames: z.array(z.string()),
+      objectives: z.array(studentObjectiveProgressSchema),
+    }),
+  ),
+});
+export type ObjectiveProgressOverview = z.infer<typeof objectiveProgressOverviewResponseSchema>;

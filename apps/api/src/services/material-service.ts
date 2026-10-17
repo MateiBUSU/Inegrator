@@ -1,10 +1,12 @@
 import {
   allQuestions,
   materialDefinitionSchema,
+  objectiveProgressOverviewResponseSchema,
   toStudentMaterialView,
   type CreateMaterialRequest,
   type MaterialDefinition,
   type MaterialSummary,
+  type ObjectiveProgressOverview,
   type StudentMaterialView,
   type TeacherMaterial,
   type UpdateMaterialRequest,
@@ -25,6 +27,10 @@ import {
   type MaterialRecord,
   type MaterialStatusValue,
 } from "../repositories/material-repository";
+import {
+  listProgressForStudents,
+  listStudentsOfMaterial,
+} from "../repositories/practice-repository";
 import { findChapterById, findSubjectById, listSubjects } from "../repositories/subject-repository";
 import {
   contentOf,
@@ -341,4 +347,57 @@ export async function assign(
     throw err;
   }
   return { materialId: record.id, classIds: requested };
+}
+
+const OBJECTIVE_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+/**
+ * Per-student objective progress for one of the teacher's own materials: every student enrolled
+ * in a class the material is assigned to, with their own row for each catalogue objective of the
+ * material (not_started when they never practiced). Nothing is averaged or aggregated.
+ */
+export async function getObjectiveProgressOverview(
+  auth: AuthContext,
+  id: string,
+): Promise<ObjectiveProgressOverview> {
+  const record = await loadOwned(auth, id);
+  // Material objective ids are local unless they are rows of the catalogue (UUIDs).
+  const objectives = definitionOf(record)
+    .objectives.filter((o) => OBJECTIVE_UUID.test(o.id))
+    .map((o) => ({ id: o.id, text: o.text }));
+  const enrolled = await listStudentsOfMaterial(record.id);
+
+  const byStudent = new Map<string, { displayName: string; classNames: string[] }>();
+  for (const entry of enrolled) {
+    const known = byStudent.get(entry.studentId);
+    if (known) known.classNames.push(entry.className);
+    else
+      byStudent.set(entry.studentId, {
+        displayName: entry.displayName,
+        classNames: [entry.className],
+      });
+  }
+  const rows = await listProgressForStudents(
+    [...byStudent.keys()],
+    objectives.map((o) => o.id),
+  );
+  const rowOf = new Map(rows.map((row) => [`${row.studentId}|${row.objectiveId}`, row]));
+
+  return objectiveProgressOverviewResponseSchema.parse({
+    objectives,
+    students: [...byStudent.entries()].map(([studentId, student]) => ({
+      studentId,
+      displayName: student.displayName,
+      classNames: student.classNames,
+      objectives: objectives.map((o) => {
+        const row = rowOf.get(`${studentId}|${o.id}`);
+        return {
+          objectiveId: o.id,
+          status: row?.status ?? "not_started",
+          attemptsCount: row?.attemptsCount ?? 0,
+          strategiesTried: row?.strategiesTried ?? [],
+        };
+      }),
+    })),
+  });
 }

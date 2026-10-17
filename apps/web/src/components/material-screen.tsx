@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { api, userMessage } from "../api";
 import { AssignPanel } from "./assign-panel";
+import { ObjectiveProgressPanel } from "./objective-progress-panel";
 import { ErrorState } from "./error-state";
 import { MaterialEditor } from "./material-editor";
 import { MaterialView } from "./material-view";
@@ -39,6 +40,7 @@ export function MaterialScreen({ initial }: { initial: TeacherMaterial }) {
             <>
               <NewVersionPanel materialId={material.id} />
               <AssignPanel materialId={material.id} />
+              <ObjectiveProgressPanel materialId={material.id} />
             </>
           ) : null}
         </>
