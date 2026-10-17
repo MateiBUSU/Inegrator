@@ -10,6 +10,7 @@ import {
   topicParamsSchema,
   topicPolicyResponseSchema,
   topicResponseSchema,
+  tutorMessagesResponseSchema,
   tutorRequestSchema,
   tutorResponseSchema,
   type CreateTopicRequest,
@@ -22,7 +23,7 @@ import { validateBody, validateParams } from "../middleware/validate";
 import * as materialService from "../services/personal-material-service";
 import { getTopicPolicy } from "../services/policy-service";
 import * as topicService from "../services/topic-service";
-import { askTutor } from "../services/tutor-service";
+import { askTutor, listTutorMessages } from "../services/tutor-service";
 
 // Personal learning space, mounted at /api/me/topics. Students only. The student is always the
 // session's user: ownership of the topic is checked in the services, and a topic that belongs to
@@ -53,6 +54,11 @@ export function createTopicsRouter(): Router {
     const auth = getAuth(req);
     const topic = await topicService.loadOwnedTopic(auth, String(req.params.id));
     res.json(topicPolicyResponseSchema.parse(await getTopicPolicy(auth.userId, topic.id)));
+  });
+
+  router.get("/:id/tutor-messages", validateParams(topicParamsSchema), async (req, res) => {
+    const messages = await listTutorMessages(getAuth(req), String(req.params.id));
+    res.json(tutorMessagesResponseSchema.parse({ messages }));
   });
 
   router.post(

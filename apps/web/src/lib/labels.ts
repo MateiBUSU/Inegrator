@@ -44,3 +44,22 @@ export const PROGRESS_LABELS: Record<StudentProgressState, string> = {
   started: "În desfășurare",
   completed: "Încheiat",
 };
+
+// Personal learning space: the adaptive teaching policy in plain Romanian.
+const EXPLANATION_LEVEL_LABELS = { basic: "simplu", standard: "standard", advanced: "avansat" };
+const SCAFFOLDING_LABELS = { low: "scăzut", medium: "mediu", high: "ridicat" };
+
+/** "Nivel explicații: standard · Exemplu înainte de teorie: da · Sprijin: mediu · Indicii: da" */
+export function policySummary(policy: {
+  explanationLevel: keyof typeof EXPLANATION_LEVEL_LABELS;
+  exampleFirst: boolean;
+  scaffolding: keyof typeof SCAFFOLDING_LABELS;
+  hintsEnabled: boolean;
+}): string {
+  return [
+    `Nivel explicații: ${EXPLANATION_LEVEL_LABELS[policy.explanationLevel]}`,
+    `Exemplu înainte de teorie: ${policy.exampleFirst ? "da" : "nu"}`,
+    `Sprijin: ${SCAFFOLDING_LABELS[policy.scaffolding]}`,
+    `Indicii: ${policy.hintsEnabled ? "da" : "nu"}`,
+  ].join(" · ");
+}

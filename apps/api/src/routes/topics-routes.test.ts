@@ -460,6 +460,7 @@ describe("topics: create, list, delete", () => {
       ["get", "/api/me/topics"],
       ["delete", `/api/me/topics/${id}`],
       ["get", `/api/me/topics/${id}/policy`],
+      ["get", `/api/me/topics/${id}/tutor-messages`],
       ["post", `/api/me/topics/${id}/tutor`],
       ["post", `/api/me/topics/${id}/lesson`],
       ["post", `/api/me/topics/${id}/quiz`],
@@ -542,6 +543,60 @@ describe("another student's topic is a 404, identical to a missing one", () => {
 });
 
 // --- tutor ----------------------------------------------------------------------------------
+
+describe("GET /api/me/topics/:id/tutor-messages", () => {
+  const seedMessages = (user: TestUser, topicId: string, n: number) => {
+    for (let i = 1; i <= n; i++) {
+      store.messages.push({
+        id: crypto.randomUUID(),
+        studentId: user.id,
+        topicId,
+        role: i % 2 ? "user" : "tutor",
+        content: `m${i}`,
+        createdAt: nextTime(),
+      });
+    }
+  };
+
+  it("returns the owner's messages in chronological order, capped to the last 50", async () => {
+    const ana = makeUser();
+    const topic = await newTopic(ana);
+    seedMessages(ana, topic.id, 55);
+    const res = await as(ana, "get", `/api/me/topics/${topic.id}/tutor-messages`);
+    expect(res.status).toBe(200);
+    const contents = (res.body.messages as { content: string }[]).map((m) => m.content);
+    expect(contents).toHaveLength(50);
+    expect(contents[0]).toBe("m6");
+    expect(contents[49]).toBe("m55");
+    expect(Object.keys(res.body.messages[0]).sort()).toEqual([
+      "content",
+      "createdAt",
+      "id",
+      "role",
+    ]);
+  });
+
+  it("answers 404 to another student, without revealing the messages", async () => {
+    const ana = makeUser();
+    const bob = makeUser();
+    const topic = await newTopic(ana);
+    seedMessages(ana, topic.id, 2);
+    const res = await as(bob, "get", `/api/me/topics/${topic.id}/tutor-messages`);
+    expect(res.status).toBe(404);
+    expect(res.body.error.code).toBe("TOPIC_NOT_FOUND");
+    expect(JSON.stringify(res.body)).not.toContain("m1");
+  });
+
+  it("only returns messages of the requested topic", async () => {
+    const ana = makeUser();
+    const first = await newTopic(ana);
+    const second = await newTopic(ana);
+    seedMessages(ana, first.id, 2);
+    const res = await as(ana, "get", `/api/me/topics/${second.id}/tutor-messages`);
+    expect(res.status).toBe(200);
+    expect(res.body.messages).toEqual([]);
+  });
+});
 
 describe("POST /api/me/topics/:id/tutor", () => {
   it("returns the validated reply and saves both messages", async () => {

@@ -4,6 +4,7 @@ import * as classesApi from "./classes";
 import * as documentsApi from "./documents";
 import * as materialsApi from "./materials";
 import * as meApi from "./me";
+import * as topicsApi from "./topics";
 
 export { ApiError, FALLBACK_MESSAGE, messageForCode, userMessage } from "./errors";
 export type {
@@ -21,4 +22,5 @@ export const api = {
   documents: documentsApi,
   materials: materialsApi,
   me: meApi,
+  topics: topicsApi,
 };

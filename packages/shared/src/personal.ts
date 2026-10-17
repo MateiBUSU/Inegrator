@@ -62,6 +62,16 @@ export const tutorResponseSchema = z.object({
 });
 export type TutorResponse = z.infer<typeof tutorResponseSchema>;
 
+/** A stored chat message, as returned by the history endpoint. */
+export const tutorMessageSchema = z.object({
+  id: z.uuid(),
+  role: z.enum(["user", "tutor"]),
+  content: z.string(),
+  createdAt: z.string(),
+});
+export type TutorMessage = z.infer<typeof tutorMessageSchema>;
+export const tutorMessagesResponseSchema = z.object({ messages: z.array(tutorMessageSchema) });
+
 // --- personal materials ------------------------------------------------------------------------
 
 export const generatePersonalQuizRequestSchema = z.object({

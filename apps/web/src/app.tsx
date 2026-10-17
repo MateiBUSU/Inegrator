@@ -10,6 +10,9 @@ import { StudentClassDetailPage } from "./pages/student-class-detail-page";
 import { StudentClassesPage } from "./pages/student-classes-page";
 import { StudentMaterialPage } from "./pages/student-material-page";
 import { StudentProgressPage } from "./pages/student-progress-page";
+import { StudentTopicDetailPage } from "./pages/student-topic-detail-page";
+import { StudentTopicMaterialPage } from "./pages/student-topic-material-page";
+import { StudentTopicsPage } from "./pages/student-topics-page";
 import { TeacherClassDetailPage } from "./pages/teacher-class-detail-page";
 import { TeacherClassesPage } from "./pages/teacher-classes-page";
 import { TeacherGeneratePage } from "./pages/teacher-generate-page";
@@ -44,6 +47,12 @@ export function App() {
             <Route path="student/classes" element={<StudentClassesPage />} />
             <Route path="student/classes/:id" element={<StudentClassDetailPage />} />
             <Route path="student/materials/:id" element={<StudentMaterialPage />} />
+            <Route path="student/topics" element={<StudentTopicsPage />} />
+            <Route path="student/topics/:id" element={<StudentTopicDetailPage />} />
+            <Route
+              path="student/topics/:id/materials/:materialId"
+              element={<StudentTopicMaterialPage />}
+            />
             <Route path="student/progress" element={<StudentProgressPage />} />
           </Route>
         </Route>

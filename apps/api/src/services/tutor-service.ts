@@ -1,6 +1,6 @@
-import type { TutorResponse } from "@app/shared";
+import type { TutorMessage, TutorResponse } from "@app/shared";
 import { getAiEngine } from "../ai";
-import { TUTOR_HISTORY_MESSAGES } from "../config/adaptation";
+import { TUTOR_HISTORY_MESSAGES, TUTOR_HISTORY_PAGE_SIZE } from "../config/adaptation";
 import { env } from "../config/env";
 import { appendExchange, listRecentMessages } from "../repositories/tutor-repository";
 import { consumeAiQuota } from "./ai-quota";
@@ -48,4 +48,19 @@ export async function askTutor(
     },
     quota,
   };
+}
+
+/** The last stored messages of this student's chat in an owned topic, oldest first. */
+export async function listTutorMessages(
+  auth: AuthContext,
+  topicId: string,
+): Promise<TutorMessage[]> {
+  const topic = await loadOwnedTopic(auth, topicId);
+  const records = await listRecentMessages(auth.userId, topic.id, TUTOR_HISTORY_PAGE_SIZE);
+  return records.map((record) => ({
+    id: record.id,
+    role: record.role,
+    content: record.content,
+    createdAt: record.createdAt.toISOString(),
+  }));
 }

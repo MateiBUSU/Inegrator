@@ -71,6 +71,9 @@ export function Layout() {
               <NavLink to="/student/classes" className={navLinkClass}>
                 Clasele mele
               </NavLink>
+              <NavLink to="/student/topics" className={navLinkClass}>
+                Materiale individuale
+              </NavLink>
               <NavLink to="/student/progress" className={navLinkClass}>
                 Progresul meu
               </NavLink>

@@ -23,6 +23,8 @@ export const ADAPTATION: AdaptationConfig = {
 
 /** How many recent tutor messages are sent to the model as context. */
 export const TUTOR_HISTORY_MESSAGES = 10;
+/** How many stored messages the chat history endpoint returns (the most recent ones). */
+export const TUTOR_HISTORY_PAGE_SIZE = 50;
 
 /** Topics one student may keep (a guard against unbounded rows, not a pedagogical limit). */
 export const MAX_TOPICS_PER_STUDENT = 20;
