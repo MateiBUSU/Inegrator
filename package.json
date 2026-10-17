@@ -8,6 +8,7 @@
   ],
   "scripts": {
     "dev": "concurrently -n api,web -c blue,green \"npm run dev -w @app/api\" \"npm run dev -w @app/web\"",
+    "build": "npm run build -w @app/shared -w @app/api -w @app/web --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "lint": "eslint .",
     "format": "prettier --write .",

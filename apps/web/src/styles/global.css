@@ -296,9 +296,13 @@
     @apply mb-4;
   }
 
-  /* TODO(restyle): the sticky bar overlaps the content slightly at the bottom of long pages. */
+  /* Sticks to the bottom of the viewport above the form fields; the editor keeps room below them. */
   .save-bar {
-    @apply sticky bottom-0 shadow-lg;
+    @apply sticky bottom-0 z-10 mb-4 shadow-[0_-6px_16px_rgb(15_23_42/0.08)];
+  }
+
+  .editor-lock {
+    @apply min-w-0 pb-2;
   }
 
   .suggestion {

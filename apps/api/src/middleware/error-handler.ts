@@ -12,14 +12,14 @@ export class HttpError extends Error {
   }
 }
 
-// Errors raised by express.json(): a 4xx status plus a `type` such as entity.too.large,
-// entity.parse.failed, encoding.unsupported or charset.unsupported.
-function isBodyParserError(err: unknown): err is { status: number; type: string } {
+// Errors raised by express.json(): a 4xx status, usually with a `type` such as entity.too.large,
+// entity.parse.failed, encoding.unsupported or charset.unsupported. A body that fails to
+// decompress has a 4xx status and `expose: true` but no `type`, so that counts too.
+function isBodyParserError(err: unknown): err is { status: number; type?: string } {
   return (
     typeof err === "object" &&
     err !== null &&
-    "type" in err &&
-    typeof err.type === "string" &&
+    (("type" in err && typeof err.type === "string") || ("expose" in err && err.expose === true)) &&
     "status" in err &&
     typeof err.status === "number" &&
     err.status >= 400 &&
@@ -27,7 +27,7 @@ function isBodyParserError(err: unknown): err is { status: number; type: string 
   );
 }
 
-function bodyParserResponse(err: { status: number; type: string }) {
+function bodyParserResponse(err: { status: number; type?: string }) {
   if (err.type === "entity.too.large") {
     return { code: "PAYLOAD_TOO_LARGE", message: "Cererea este prea mare." };
   }
