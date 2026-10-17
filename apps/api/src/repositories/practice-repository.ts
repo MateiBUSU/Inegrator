@@ -125,31 +125,38 @@ export function findExercise(
   });
 }
 
-/** Creates the progress row if the student has none yet, then stores the exercise. */
-export async function createExerciseEnsuringProgress(data: {
+/**
+ * Creates the progress row if the student has none yet, then stores the exercise. The row is
+ * created with INSERT ... ON CONFLICT DO NOTHING: two requests starting the same objective at
+ * once (a double click, two tabs, React StrictMode in development) must not collide on the
+ * unique (student, objective) index, which a read-then-insert upsert would.
+ */
+export function createExerciseEnsuringProgress(data: {
   studentId: string;
   objectiveId: string;
   question: Question;
 }): Promise<{ exercise: PracticeExerciseRecord; progress: ObjectiveProgressRecord }> {
-  const [progress, exercise] = await prisma.$transaction([
-    prisma.objectiveProgress.upsert({
+  return prisma.$transaction(async (tx) => {
+    await tx.objectiveProgress.createMany({
+      data: [{ studentId: data.studentId, objectiveId: data.objectiveId }],
+      skipDuplicates: true,
+    });
+    const progress = await tx.objectiveProgress.findUniqueOrThrow({
       where: {
         studentId_objectiveId: { studentId: data.studentId, objectiveId: data.objectiveId },
       },
-      create: { studentId: data.studentId, objectiveId: data.objectiveId },
-      update: {},
       select: progressSelect,
-    }),
-    prisma.practiceExercise.create({
+    });
+    const exercise = await tx.practiceExercise.create({
       data: {
         studentId: data.studentId,
         objectiveId: data.objectiveId,
         question: toJson(data.question),
       },
       select: exerciseSelect,
-    }),
-  ]);
-  return { exercise, progress };
+    });
+    return { exercise, progress };
+  });
 }
 
 /**
