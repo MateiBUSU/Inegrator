@@ -8,3 +8,18 @@ apps/api/src/generated/
 !.env.example
 *.log
 .DS_Store
+
+# Local database dumps and files (not *.sql: Prisma migrations use that extension)
+*.dump
+*.pgdump
+*.bak
+*.sqlite
+*.sqlite3
+*.db
+dump*.sql
+*-dump.sql
+*_dump.sql
+backup*.sql
+
+# Local Claude Code settings
+.claude/settings.local.json
