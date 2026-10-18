@@ -401,6 +401,20 @@
               "text": "Folosește moștenirea pentru a extinde o clasă existentă."
             }
           ]
+        },
+        {
+          "position": 6,
+          "title": "Teoria grafurilor",
+          "objectives": [
+            {
+              "code": "CPP11-6.1",
+              "text": "Memorizează un graf neorientat prin matrice de adiacență și liste de adiacență."
+            },
+            {
+              "code": "CPP11-6.2",
+              "text": "Calculează gradul unui nod și parcurge un graf în lățime (BFS) și în adâncime (DFS)."
+            }
+          ]
         }
       ]
     }
