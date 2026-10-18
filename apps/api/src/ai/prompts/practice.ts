@@ -12,7 +12,7 @@ const OUTPUT_ONLY_JSON = "Respond with a single JSON object and nothing else (no
 export const STRATEGY_GUIDANCE: Record<ExplanationStrategy, string> = {
   ANALOGIE: "Explain through an analogy from everyday life that maps clearly onto the concept.",
   PAS_CU_PAS:
-    "Explain as a numbered, step-by-step procedure, one small step at a time, with the reason for each step.",
+    'Explain as a numbered, step-by-step procedure, one small step at a time, with the reason for each step. Write it as a real Markdown list: each numbered step on its own line ("1. ...", then a line break, "2. ..."), never as one running paragraph (inside the JSON string, separate the lines with \n).',
   EXEMPLU_LUCRAT:
     "Explain through one fully worked example, showing every intermediate value, then name the general rule.",
   EXPLICATIE_VIZUALA:

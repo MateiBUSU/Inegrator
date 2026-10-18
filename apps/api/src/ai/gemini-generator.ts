@@ -1,5 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
-import { isQuotaError } from "./gemini-keys";
+import { isOverloadError, isQuotaError } from "./gemini-keys";
 import type {
   ContentGenerator,
   LessonInput,
@@ -54,12 +54,16 @@ export class GeminiGenerator implements ContentGenerator {
   }
 
   /**
-   * One request, with key rotation on quota errors only. With several keys, a 429 marks the
-   * current key as exhausted for a while and the SAME request is sent with the next usable key;
-   * other errors (timeouts, 503 "high demand", bad output) are thrown as they are, so the
-   * engine's retry-once-with-the-same-key behavior is unchanged. If every key is exhausted the
-   * quota error is thrown (the engine turns it into AI_UNAVAILABLE): bounded, no loop. With a
-   * single key nothing is tracked and the behavior is exactly the old one.
+   * One request, with key rotation. With several keys:
+   *  - a 429 (quota) marks the current key as exhausted for a while and the SAME request is sent
+   *    with the next usable key;
+   *  - a 503 ("high demand") is retried once, at once, on a DIFFERENT key (the current key stays
+   *    active: overload is not the key's fault), because the capacity of a model can differ
+   *    per project;
+   *  - every other error (timeouts, 500, bad output) is thrown as it is, so the engine's
+   *    retry-once-with-the-same-key behavior is unchanged.
+   * If every key fails the last error is thrown (the engine turns it into AI_UNAVAILABLE):
+   * bounded, no loop. With a single key nothing is tracked and the behavior is exactly the old one.
    */
   private async callJson(prompt: Prompt): Promise<unknown> {
     const count = this.clients.length;
@@ -67,7 +71,21 @@ export class GeminiGenerator implements ContentGenerator {
       try {
         return await this.callWith(this.clients[this.active] as GoogleGenAI, prompt);
       } catch (error) {
-        if (count === 1 || !isQuotaError(error)) throw error;
+        if (count === 1) throw error;
+        if (isOverloadError(error)) {
+          const other = this.nextUsableKey();
+          if (other === null) throw error;
+          console.error(
+            `Gemini key ${this.active + 1} of ${count} is overloaded (503): retrying on key ${other + 1}`,
+          );
+          try {
+            return await this.callWith(this.clients[other] as GoogleGenAI, prompt);
+          } catch (second) {
+            if (isQuotaError(second)) this.exhaustedUntil[other] = Date.now() + KEY_COOLDOWN_MS;
+            throw second;
+          }
+        }
+        if (!isQuotaError(error)) throw error;
         this.exhaustedUntil[this.active] = Date.now() + KEY_COOLDOWN_MS;
         const next = this.nextUsableKey();
         if (next === null || tried + 1 >= count) throw error;

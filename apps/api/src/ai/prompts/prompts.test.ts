@@ -341,3 +341,11 @@ describe("reasoning questions in prompts", () => {
     expect(grading.system).toContain("Do NOT use Markdown tables");
   });
 });
+
+describe("PAS_CU_PAS guidance", () => {
+  it("asks for a real Markdown list, one numbered step per line", async () => {
+    const { STRATEGY_GUIDANCE } = await import("./practice");
+    expect(STRATEGY_GUIDANCE.PAS_CU_PAS).toContain("each numbered step on its own line");
+    expect(STRATEGY_GUIDANCE.PAS_CU_PAS).toContain("never as one running paragraph");
+  });
+});

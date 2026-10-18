@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isQuotaError, resolveGeminiKeys } from "./gemini-keys";
+import { isOverloadError, isQuotaError, resolveGeminiKeys } from "./gemini-keys";
 
 describe("resolveGeminiKeys", () => {
   it("uses the single GEMINI_API_KEY when GEMINI_API_KEYS is unset", () => {
@@ -31,5 +31,16 @@ describe("isQuotaError", () => {
     expect(isQuotaError(new SyntaxError("bad json"))).toBe(false);
     expect(isQuotaError(null)).toBe(false);
     expect(isQuotaError("429")).toBe(false);
+  });
+});
+
+describe("isOverloadError", () => {
+  it("is true only for a 503 ApiError", () => {
+    const api = (status: number) => Object.assign(new Error("x"), { name: "ApiError", status });
+    expect(isOverloadError(api(503))).toBe(true);
+    expect(isOverloadError(api(429))).toBe(false);
+    expect(isOverloadError(api(500))).toBe(false);
+    expect(isOverloadError(new Error("timeout"))).toBe(false);
+    expect(isOverloadError(undefined)).toBe(false);
   });
 });

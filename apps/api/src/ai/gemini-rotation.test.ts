@@ -73,7 +73,6 @@ describe("a quota error rotates to the next key", () => {
 describe("other errors do not rotate", () => {
   it.each([
     ["a timeout", () => new Error("This operation was aborted")],
-    ["a 503 high demand", () => apiError(503)],
     ["a server error", () => apiError(500)],
   ])("%s: same key, retried once by the engine, as before", async (_label, make) => {
     sdk.behave = () => make();
@@ -86,6 +85,49 @@ describe("other errors do not rotate", () => {
 
   it("malformed output: same key, retried once, no rotation", async () => {
     sdk.behave = () => ({ text: '{"unexpected":1}' });
+    await expect(engineOf([K1, K2]).extractStyleNotes(input)).rejects.toBeInstanceOf(
+      AiUnavailableError,
+    );
+    expect(sdk.calls).toEqual([K1, K1]);
+  });
+});
+
+describe("a 503 (high demand) is retried once on a different key", () => {
+  it("key 1 overloaded, key 2 answers: same request, no waiting, key 1 stays the active key", async () => {
+    let first = true;
+    sdk.behave = (key) => {
+      if (key === K1 && first) {
+        first = false;
+        return apiError(503);
+      }
+      return ok;
+    };
+    const engine = engineOf([K1, K2]);
+    await expect(engine.extractStyleNotes(input)).resolves.toBeDefined();
+    expect(sdk.calls).toEqual([K1, K2]);
+    expect(logged).toEqual(["Gemini key 1 of 2 is overloaded (503): retrying on key 2"]);
+    await engine.extractStyleNotes(input);
+    expect(sdk.calls).toEqual([K1, K2, K1]); // overload is not the key's fault: no switch
+  });
+
+  it("every key overloaded: both tried, the engine retries once more, then AI_UNAVAILABLE", async () => {
+    sdk.behave = () => apiError(503);
+    await expect(engineOf([K1, K2]).extractStyleNotes(input)).rejects.toBeInstanceOf(
+      AiUnavailableError,
+    );
+    expect(sdk.calls).toEqual([K1, K2, K1, K2]);
+  });
+
+  it("a single key is unchanged: the engine retries the same key once", async () => {
+    sdk.behave = () => apiError(503);
+    await expect(engineOf([K1]).extractStyleNotes(input)).rejects.toBeInstanceOf(
+      AiUnavailableError,
+    );
+    expect(sdk.calls).toEqual([K1, K1]);
+  });
+
+  it("only 503 triggers it: a 500 stays on the same key", async () => {
+    sdk.behave = () => apiError(500);
     await expect(engineOf([K1, K2]).extractStyleNotes(input)).rejects.toBeInstanceOf(
       AiUnavailableError,
     );

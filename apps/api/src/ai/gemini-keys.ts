@@ -15,6 +15,19 @@ export function resolveGeminiKeys(source: {
 }
 
 /**
+ * True for a 503 "high demand" (UNAVAILABLE) from the Gemini SDK: an ApiError with status 503.
+ * Capacity can differ per key (project), so one retry on another key is worth a request.
+ */
+export function isOverloadError(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "status" in error &&
+    (error as { status: unknown }).status === 503
+  );
+}
+
+/**
  * True for a quota / rate-limit error from the Gemini SDK: an ApiError whose HTTP status is 429
  * (RESOURCE_EXHAUSTED). Checked against a real error object: it has `name: "ApiError"` and a
  * numeric `status`. A 503 "high demand" is a different error and must NOT count: another key
