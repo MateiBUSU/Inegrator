@@ -2,7 +2,8 @@ import request from "supertest";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { DEFAULT_POLICY } from "@app/shared";
 import { setAiProviderForTesting } from "../ai";
-import type { ContentGenerator, TutorInput } from "../ai/generator";
+import type { ContentGenerator, LessonInput, TutorInput } from "../ai/generator";
+import { buildLessonPrompt } from "../ai/prompts";
 import { MockGenerator } from "../ai/mock-generator";
 import { createApp } from "../app";
 import { signToken } from "../services/token-service";
@@ -1069,6 +1070,32 @@ describe("adaptive policy through the API", () => {
     const expected = { ...DEFAULT_POLICY, scaffolding: "high", exampleFirst: true };
     expect((seen.lessons[0] as { policy: unknown }).policy).toEqual(expected);
     expect(seen.tutor[0]?.policy).toEqual(expected);
+  });
+
+  it("two policy states give differently-shaped lesson prompts, and the lesson is a full page", async () => {
+    const { provider, seen } = capturing();
+    setAiProviderForTesting(provider);
+    const ana = makeUser();
+    const fresh = await newTopic(ana);
+    const struggling = await newTopic(ana);
+    await submit(ana, seedQuiz(ana, struggling.id, 3), [false, false, false]);
+
+    const first = await as(ana, "post", `/api/me/topics/${fresh.id}/lesson`).send({});
+    await as(ana, "post", `/api/me/topics/${struggling.id}/lesson`).send({});
+    const [a, b] = seen.lessons as LessonInput[];
+    expect(a?.mode).toBe("personal");
+    const promptA = buildLessonPrompt(a as LessonInput);
+    const promptB = buildLessonPrompt(b as LessonInput);
+    expect(promptA.system).not.toBe(promptB.system);
+    expect(promptB.system).toContain("small guided steps");
+    expect(promptA.system).not.toContain("small guided steps");
+    // The student's own title and goal are what the lesson is built around.
+    expect(promptA.user).toContain(`CHAPTER: ${fresh.title}`);
+
+    const lesson = first.body.material.lesson;
+    expect((lesson.body.match(/^## /gm) ?? []).length).toBeGreaterThanOrEqual(4);
+    expect(lesson.checkQuestions.length).toBeGreaterThanOrEqual(3);
+    expect(first.body.material.provider).toBe("mock");
   });
 
   it("a failure while adapting never fails the student's submission", async () => {

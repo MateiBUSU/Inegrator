@@ -59,6 +59,7 @@ export function toPersonalView(record: PersonalMaterialRecord): PersonalMaterial
         }
       : {}),
     ...(content.questions ? { questions: content.questions.map(toStudentQuestion) } : {}),
+    ...(content.generation ? { provider: content.generation.provider } : {}),
     createdAt: record.createdAt.toISOString(),
   });
 }

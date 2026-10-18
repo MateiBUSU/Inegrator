@@ -126,6 +126,7 @@ export const personalMaterialViewSchema = z.object({
     })
     .optional(),
   questions: z.array(studentQuestionSchema).optional(),
+  provider: z.enum(["mock", "gemini"]).optional(),
   createdAt: z.string(),
 });
 export type PersonalMaterialView = z.infer<typeof personalMaterialViewSchema>;
