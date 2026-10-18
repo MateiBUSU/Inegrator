@@ -7,6 +7,13 @@ const envSchema = z
     PORT: z.coerce.number().int().min(1).max(65535).default(3001),
     NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
     CORS_ORIGIN: z.string().url().default("http://localhost:5173"),
+    // Interface to bind. Unset keeps Node's default (all interfaces).
+    HOST: z.preprocess(emptyToUndefined, z.string().min(1).optional()),
+    // Development only: also accept browser origins from private LAN addresses (see lan-origin.ts).
+    ALLOW_LAN_ORIGINS: z
+      .enum(["true", "false"])
+      .default("false")
+      .transform((value) => value === "true"),
     DATABASE_URL: z
       .string()
       .url()
@@ -35,6 +42,13 @@ const envSchema = z
         code: "custom",
         path: ["GEMINI_API_KEY"],
         message: "required when AI_PROVIDER=gemini",
+      });
+    }
+    if (value.ALLOW_LAN_ORIGINS && value.NODE_ENV !== "development") {
+      ctx.addIssue({
+        code: "custom",
+        path: ["ALLOW_LAN_ORIGINS"],
+        message: "only allowed when NODE_ENV=development",
       });
     }
     if (value.NODE_ENV !== "production") return;

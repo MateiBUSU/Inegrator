@@ -79,3 +79,21 @@ describe("AI environment settings", () => {
     expect((await loadEnv({ AI_DAILY_LIMIT_PER_TEACHER: "0" })).AI_DAILY_LIMIT_PER_TEACHER).toBe(0);
   });
 });
+
+describe("LAN origins setting", () => {
+  it("is off by default", async () => {
+    expect((await loadEnv()).ALLOW_LAN_ORIGINS).toBe(false);
+  });
+
+  it("can be turned on in development", async () => {
+    const env = await loadEnv({ NODE_ENV: "development", ALLOW_LAN_ORIGINS: "true" });
+    expect(env.ALLOW_LAN_ORIGINS).toBe(true);
+  });
+
+  it("is refused outside development", async () => {
+    await expect(loadEnv({ NODE_ENV: "production", ALLOW_LAN_ORIGINS: "true" })).rejects.toThrow(
+      "exit(1)",
+    );
+    expect(message()).toContain("ALLOW_LAN_ORIGINS");
+  });
+});

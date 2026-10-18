@@ -30,6 +30,9 @@ export default defineConfig({
   },
   server: {
     port: 5173,
+    // Bind all interfaces so phones/laptops on the same network can open the dev server. The
+    // browser only talks to this origin: /api is proxied below, so the API needs no CORS for it.
+    host: true,
     proxy: {
       "/api": "http://localhost:3001",
     },

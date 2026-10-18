@@ -3,6 +3,7 @@ import cors from "cors";
 import express from "express";
 import helmet from "helmet";
 import { env } from "./config/env";
+import { createCorsOrigin } from "./config/lan-origin";
 import { errorHandler, notFoundHandler } from "./middleware/error-handler";
 import { createAuthRouter } from "./routes/auth-routes";
 import { createAttemptsRouter } from "./routes/attempts-routes";
@@ -20,7 +21,12 @@ export function createApp() {
   if (env.TRUST_PROXY > 0) app.set("trust proxy", env.TRUST_PROXY);
 
   app.use(helmet());
-  app.use(cors({ origin: env.CORS_ORIGIN, credentials: true }));
+  app.use(
+    cors({
+      origin: createCorsOrigin(env.CORS_ORIGIN, env.ALLOW_LAN_ORIGINS),
+      credentials: true,
+    }),
+  );
   app.use(cookieParser());
 
   // Mounted BEFORE the global JSON parser on purpose: the document upload route needs a larger
