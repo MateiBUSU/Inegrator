@@ -3,6 +3,9 @@ import { DEFAULT_POLICY, type Policy } from "@app/shared";
 import type { LessonInput, QuizInput } from "../generator";
 import {
   buildLessonPrompt,
+  buildPracticeDiagnosisPrompt,
+  buildPracticeExercisePrompt,
+  buildTutorPrompt,
   buildQuizPrompt,
   buildSolvePrompt,
   buildStyleNotesPrompt,
@@ -262,5 +265,49 @@ describe("lesson prompt: a full, grounded page", () => {
     expect(guided.system).toContain("worked example before");
     expect(plain.system).toContain("minimal guidance");
     expect(guided.system).not.toBe(plain.system);
+  });
+});
+
+describe("prompts: output must render in the web app", () => {
+  it("every student/teacher-facing prompt forbids tables and math notation", () => {
+    const tutorInput = {
+      topicGoal: "BFS",
+      question: "Ce e BFS?",
+      recentMessages: [],
+      policy: DEFAULT_POLICY,
+    };
+    const q = {
+      id: "q1",
+      type: "short" as const,
+      prompt: "p",
+      acceptedAnswers: ["x"],
+      objectiveId: "o",
+      explanation: "e",
+      verification: "unchecked" as const,
+    };
+    const practiceBase = {
+      subjectTitle: "s",
+      chapterTitle: "c",
+      objective: { id: "o", text: "t" },
+      policy: DEFAULT_POLICY,
+    };
+    const systems = [
+      buildLessonPrompt(base).system,
+      buildLessonPrompt({ ...base, mode: "personal" }).system,
+      buildQuizPrompt(quiz).system,
+      buildTutorPrompt(tutorInput).system,
+      buildPracticeExercisePrompt({ ...practiceBase, strategy: null, explanation: null }).system,
+      buildPracticeDiagnosisPrompt({
+        ...practiceBase,
+        question: q,
+        submittedAnswer: "y",
+        strategy: "ANALOGIE",
+        previousStrategies: [],
+      }).system,
+    ];
+    for (const system of systems) {
+      expect(system).toContain("Do NOT use Markdown tables");
+      expect(system).toContain("no $...$ or $$...$$");
+    }
   });
 });
