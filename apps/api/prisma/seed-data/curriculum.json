@@ -15,7 +15,10 @@
               "code": "BAC-CPP-1.1",
               "text": "Definește și apelează funcții cu parametri transmiși prin valoare și prin referință."
             },
-            { "code": "BAC-CPP-1.2", "text": "Urmărește execuția unui subprogram recursiv simplu." }
+            {
+              "code": "BAC-CPP-1.2",
+              "text": "Urmărește execuția unui subprogram recursiv simplu."
+            }
           ]
         },
         {
@@ -49,15 +52,66 @@
               "code": "CPP9-1.1",
               "text": "Declară variabile și folosește tipurile de date fundamentale."
             },
-            { "code": "CPP9-1.2", "text": "Citește și afișează date folosind cin și cout." }
+            {
+              "code": "CPP9-1.2",
+              "text": "Citește și afișează date folosind cin și cout."
+            }
           ]
         },
         {
           "position": 2,
           "title": "Structuri de control",
           "objectives": [
-            { "code": "CPP9-2.1", "text": "Scrie instrucțiuni de decizie if și switch." },
-            { "code": "CPP9-2.2", "text": "Scrie instrucțiuni repetitive for, while și do-while." }
+            {
+              "code": "CPP9-2.1",
+              "text": "Scrie instrucțiuni de decizie if și switch."
+            },
+            {
+              "code": "CPP9-2.2",
+              "text": "Scrie instrucțiuni repetitive for, while și do-while."
+            }
+          ]
+        },
+        {
+          "position": 3,
+          "title": "Algoritmi elementari",
+          "objectives": [
+            {
+              "code": "CPP9-3.1",
+              "text": "Calculează cel mai mare divizor comun și verifică dacă un număr este prim."
+            },
+            {
+              "code": "CPP9-3.2",
+              "text": "Descompune un număr în cifre și în factori primi."
+            }
+          ]
+        },
+        {
+          "position": 4,
+          "title": "Tablouri unidimensionale",
+          "objectives": [
+            {
+              "code": "CPP9-4.1",
+              "text": "Memorizează și parcurge un tablou unidimensional."
+            },
+            {
+              "code": "CPP9-4.2",
+              "text": "Calculează sume, minime și maxime pe un tablou unidimensional."
+            }
+          ]
+        },
+        {
+          "position": 5,
+          "title": "Tablouri bidimensionale",
+          "objectives": [
+            {
+              "code": "CPP9-5.1",
+              "text": "Memorizează și parcurge o matrice pe linii și pe coloane."
+            },
+            {
+              "code": "CPP9-5.2",
+              "text": "Prelucrează elementele de pe diagonale ale unei matrice pătratice."
+            }
           ]
         }
       ]
@@ -77,15 +131,108 @@
               "code": "CPP10-1.1",
               "text": "Parcurge un tablou și calculează sume, minime și maxime."
             },
-            { "code": "CPP10-1.2", "text": "Caută un element într-un tablou." }
+            {
+              "code": "CPP10-1.2",
+              "text": "Caută un element într-un tablou."
+            }
           ]
         },
         {
           "position": 2,
           "title": "Subprograme",
           "objectives": [
-            { "code": "CPP10-2.1", "text": "Definește funcții cu și fără valoare returnată." },
-            { "code": "CPP10-2.2", "text": "Face diferența între variabile locale și globale." }
+            {
+              "code": "CPP10-2.1",
+              "text": "Definește funcții cu și fără valoare returnată."
+            },
+            {
+              "code": "CPP10-2.2",
+              "text": "Face diferența între variabile locale și globale."
+            }
+          ]
+        },
+        {
+          "position": 3,
+          "title": "Recursivitate",
+          "objectives": [
+            {
+              "code": "CPP10-3.1",
+              "text": "Scrie funcții recursive cu condiție de oprire și apel recursiv."
+            },
+            {
+              "code": "CPP10-3.2",
+              "text": "Urmărește execuția unei funcții recursive pe stiva de apeluri."
+            }
+          ]
+        },
+        {
+          "position": 4,
+          "title": "Divide et Impera",
+          "objectives": [
+            {
+              "code": "CPP10-4.1",
+              "text": "Descompune o problemă în subprobleme și combină rezultatele lor."
+            },
+            {
+              "code": "CPP10-4.2",
+              "text": "Implementează căutarea binară și sortarea prin interclasare."
+            }
+          ]
+        },
+        {
+          "position": 5,
+          "title": "Șiruri de caractere",
+          "objectives": [
+            {
+              "code": "CPP10-5.1",
+              "text": "Memorizează și parcurge un șir de caractere."
+            },
+            {
+              "code": "CPP10-5.2",
+              "text": "Folosește funcții standard pentru copiere, comparare și căutare în șiruri."
+            }
+          ]
+        },
+        {
+          "position": 6,
+          "title": "Structuri de date neomogene",
+          "objectives": [
+            {
+              "code": "CPP10-6.1",
+              "text": "Declară o structură cu câmpuri de tipuri diferite."
+            },
+            {
+              "code": "CPP10-6.2",
+              "text": "Memorizează și sortează un tablou de structuri."
+            }
+          ]
+        },
+        {
+          "position": 7,
+          "title": "Alocarea dinamică a memoriei",
+          "objectives": [
+            {
+              "code": "CPP10-7.1",
+              "text": "Declară și folosește pointeri către variabile."
+            },
+            {
+              "code": "CPP10-7.2",
+              "text": "Alocă și eliberează memorie dinamic cu new și delete."
+            }
+          ]
+        },
+        {
+          "position": 8,
+          "title": "Structuri de date liniare",
+          "objectives": [
+            {
+              "code": "CPP10-8.1",
+              "text": "Implementează operațiile de bază pe stivă și pe coadă."
+            },
+            {
+              "code": "CPP10-8.2",
+              "text": "Memorizează o listă simplu înlănțuită și o parcurge."
+            }
           ]
         }
       ]
@@ -105,15 +252,38 @@
               "code": "PY9-1.1",
               "text": "Folosește variabile și tipurile int, float, str și bool."
             },
-            { "code": "PY9-1.2", "text": "Citește date cu input și le afișează cu print." }
+            {
+              "code": "PY9-1.2",
+              "text": "Citește date cu input și le afișează cu print."
+            }
           ]
         },
         {
           "position": 2,
           "title": "Structuri de control",
           "objectives": [
-            { "code": "PY9-2.1", "text": "Scrie instrucțiuni condiționale if, elif și else." },
-            { "code": "PY9-2.2", "text": "Scrie bucle for și while." }
+            {
+              "code": "PY9-2.1",
+              "text": "Scrie instrucțiuni condiționale if, elif și else."
+            },
+            {
+              "code": "PY9-2.2",
+              "text": "Scrie bucle for și while."
+            }
+          ]
+        },
+        {
+          "position": 3,
+          "title": "Algoritmi elementari",
+          "objectives": [
+            {
+              "code": "PY9-3.1",
+              "text": "Calculează cel mai mare divizor comun și verifică dacă un număr este prim."
+            },
+            {
+              "code": "PY9-3.2",
+              "text": "Descompune un număr în cifre și în factori primi."
+            }
           ]
         }
       ]
@@ -133,15 +303,103 @@
               "code": "PY10-1.1",
               "text": "Creează și parcurge liste, folosind indexarea și feliile."
             },
-            { "code": "PY10-1.2", "text": "Folosește metodele append, remove și sort." }
+            {
+              "code": "PY10-1.2",
+              "text": "Folosește metodele append, remove și sort."
+            }
           ]
         },
         {
           "position": 2,
           "title": "Funcții",
           "objectives": [
-            { "code": "PY10-2.1", "text": "Definește funcții cu parametri și valoare returnată." },
-            { "code": "PY10-2.2", "text": "Înțelege domeniul de vizibilitate al variabilelor." }
+            {
+              "code": "PY10-2.1",
+              "text": "Definește funcții cu parametri și valoare returnată."
+            },
+            {
+              "code": "PY10-2.2",
+              "text": "Înțelege domeniul de vizibilitate al variabilelor."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "programa-cpp-11",
+      "title": "Informatică C++ – clasa a XI-a",
+      "section": "programa",
+      "language": "cpp",
+      "grade": 11,
+      "chapters": [
+        {
+          "position": 1,
+          "title": "Metoda backtracking",
+          "objectives": [
+            {
+              "code": "CPP11-1.1",
+              "text": "Generează permutări, aranjamente și combinări prin backtracking."
+            },
+            {
+              "code": "CPP11-1.2",
+              "text": "Implementează o soluție backtracking cu condiții de continuare."
+            }
+          ]
+        },
+        {
+          "position": 2,
+          "title": "Metoda greedy",
+          "objectives": [
+            {
+              "code": "CPP11-2.1",
+              "text": "Alege la fiecare pas soluția locală optimă pentru o problemă de optimizare."
+            },
+            {
+              "code": "CPP11-2.2",
+              "text": "Argumentează când un algoritm greedy dă soluția optimă."
+            }
+          ]
+        },
+        {
+          "position": 3,
+          "title": "Programare dinamică",
+          "objectives": [
+            {
+              "code": "CPP11-3.1",
+              "text": "Descrie o problemă prin subprobleme și o relație de recurență."
+            },
+            {
+              "code": "CPP11-3.2",
+              "text": "Implementează o soluție cu tablou de rezultate parțiale."
+            }
+          ]
+        },
+        {
+          "position": 4,
+          "title": "Structuri de date arborescente",
+          "objectives": [
+            {
+              "code": "CPP11-4.1",
+              "text": "Memorizează un arbore prin vectorul de tați și prin liste de descendenți."
+            },
+            {
+              "code": "CPP11-4.2",
+              "text": "Parcurge un arbore binar în preordine, inordine și postordine."
+            }
+          ]
+        },
+        {
+          "position": 5,
+          "title": "Programare orientată obiect",
+          "objectives": [
+            {
+              "code": "CPP11-5.1",
+              "text": "Definește o clasă cu câmpuri, metode și constructori."
+            },
+            {
+              "code": "CPP11-5.2",
+              "text": "Folosește moștenirea pentru a extinde o clasă existentă."
+            }
           ]
         }
       ]
