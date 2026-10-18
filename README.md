@@ -35,6 +35,19 @@ npm run db:check -w @app/api     # row counts
 
 Endpoints: `POST /api/auth/register`, `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/me`. The session is a JWT in an httpOnly cookie named `token`.
 
+## AI provider (mock vs Gemini)
+
+`AI_PROVIDER` in `apps/api/.env` picks who writes lessons, quizzes and tutor replies. **If it is unset, the app uses `mock`**: a deterministic, canned generator for tests and offline demos. Its text is generic (it only quotes sentences from uploaded documents), and the UI marks it with a "Conținut de test (mock)" badge.
+
+To test with the real model:
+
+1. Get a Gemini API key and put it in `apps/api/.env` (never commit it):
+   `AI_PROVIDER=gemini`, `GEMINI_API_KEY=<key>`, optionally `GEMINI_MODEL=...`.
+2. Restart the API. It refuses to start with `AI_PROVIDER=gemini` and no key.
+3. Generate a new material: the mock badge is gone when the real provider wrote it. Materials generated earlier keep the provider they were made with.
+
+The Gemini provider is wired but had not been run against the live API when this was written, so check the first real generation by eye. Only topic, level, objectives and teacher-uploaded text are sent to the provider, never student data.
+
 ## Checks
 
 ```bash

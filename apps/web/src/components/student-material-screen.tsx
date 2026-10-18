@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { api, userMessage } from "../api";
 import { gradeLabel, KIND_LABELS, LANGUAGE_LABELS, SECTION_LABELS } from "../lib/labels";
 import { AttemptSection } from "./attempt-section";
-import { ProgressBadge } from "./badges";
+import { MockBadge, ProgressBadge } from "./badges";
 import { ObjectiveList } from "./objective-list";
 import { EmptyState } from "./empty-state";
 import { ErrorState } from "./error-state";
@@ -63,7 +63,8 @@ export function StudentMaterialScreen({ material, initialStatus }: StudentMateri
         <p className="muted">
           {KIND_LABELS[material.kind]} · {SECTION_LABELS[material.section]} ·{" "}
           {LANGUAGE_LABELS[material.language]} · {gradeLabel(material.grade)}{" "}
-          {isLesson ? <ProgressBadge state={status ?? "not_started"} /> : null}
+          {isLesson ? <ProgressBadge state={status ?? "not_started"} /> : null}{" "}
+          <MockBadge provider={material.provider} />
         </p>
         <ObjectiveList objectives={material.objectives} />
       </header>

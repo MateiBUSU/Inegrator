@@ -1,4 +1,5 @@
 import type { TeacherMaterial } from "@app/shared";
+import { MockBadge } from "./badges";
 
 type Generation = TeacherMaterial["generation"];
 
@@ -18,7 +19,10 @@ export function GenerationNotice({ generation }: { generation: Generation }) {
         </p>
       )}
       {generation.provider === "mock" ? (
-        <p>Generat de modulul de test (mock), nu de un model AI real.</p>
+        <p>
+          <MockBadge provider="mock" /> Generat de modulul de test, nu de un model AI real:
+          conținutul nu reflectă documentul încărcat decât prin fragmentele citate.
+        </p>
       ) : null}
     </div>
   );

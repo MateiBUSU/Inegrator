@@ -269,6 +269,10 @@
     @apply bg-warning-soft text-warning-ink;
   }
 
+  .badge-mock {
+    @apply bg-warning-soft text-warning-ink;
+  }
+
   .badge-help {
     @apply bg-danger-soft text-danger-ink;
   }

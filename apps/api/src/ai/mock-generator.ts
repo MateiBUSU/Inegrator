@@ -78,16 +78,143 @@ function programming(index: number, objective: Objective, language: "cpp" | "pyt
   };
 }
 
+/** Sentences of the teacher's source text, so the mock's questions visibly use the document. */
+function sourceSentences(chunks: string[]): string[] {
+  return chunks
+    .flatMap((chunk) => chunk.replace(/\s+/g, " ").split(/(?<=[.!?])\s+/))
+    .map((sentence) => sentence.trim())
+    .filter((sentence) => sentence.length >= 25 && sentence.length <= 300);
+}
+
+function mcqFromSource(index: number, objective: Objective, sentence: string) {
+  const correctIndex = index % OPTION_IDS.length;
+  return {
+    ...mcq(index, objective),
+    prompt: "Care dintre afirmațiile următoare apare în materialul de studiu?",
+    options: OPTION_IDS.map((id, i) => ({
+      id,
+      text:
+        i === correctIndex ? sentence : `Afirmație inventată ${i + 1}, absentă din material (mock)`,
+    })),
+    explanation: `Afirmația corectă este cea din material: „${clip(sentence, 200)}”`,
+  };
+}
+
+function shortFromSource(index: number, objective: Objective, sentence: string) {
+  const answer = keyword(sentence);
+  const blanked = sentence.replace(new RegExp(answer, "i"), "_____");
+  return {
+    ...short(index, objective),
+    prompt: clip(`Completează cu termenul care lipsește din material: „${blanked}”`, 900),
+    acceptedAnswers: [answer, answer.toUpperCase()],
+    explanation: `Termenul lipsă este „${answer}”.`,
+  };
+}
+
 function questionFor(
   index: number,
   objective: Objective,
   kind: QuizInput["kind"],
   language: "cpp" | "python" | undefined,
+  sentences: string[],
 ) {
   if (kind === "problem") return programming(index, objective, language);
   if (kind === "exercise")
     return index % 2 === 0 ? short(index, objective) : programming(index, objective, language);
-  return index % 2 === 0 ? mcq(index, objective) : short(index, objective);
+  const sentence = sentences.length > 0 ? sentences[index % sentences.length] : undefined;
+  if (index % 2 === 0)
+    return sentence ? mcqFromSource(index, objective, sentence) : mcq(index, objective);
+  return sentence ? shortFromSource(index, objective, sentence) : short(index, objective);
+}
+
+const MIN_CHECK_QUESTIONS = 3;
+const MAX_CHECK_QUESTIONS = 5;
+const MAX_EXCERPTS = 3;
+
+/**
+ * A full lesson page, shaped like a real provider's: introduction, one section per objective (a
+ * fixed outline for a single objective), a worked example and a summary. The text is canned, but
+ * the policy changes its order and style and the teacher's source text is quoted.
+ */
+function lessonBody(input: LessonInput): string {
+  const { objectives, policy } = input;
+  const topic = clip(input.chapterTitle, 150);
+  const goal = objectives.map((o) => o.text).join("; ");
+
+  const intro = [
+    "## Introducere",
+    input.mode === "personal"
+      ? `Acest material te ajută să înțelegi „${topic}”. Scopul tău: ${goal}.`
+      : `Această lecție acoperă capitolul „${topic}” din ${input.subjectTitle}.`,
+    policy.explanationLevel === "basic"
+      ? "Pornim de la ideile simple și explicăm fiecare termen nou când apare."
+      : policy.explanationLevel === "advanced"
+        ? "Mergem direct la esență, inclusiv la cazurile limită."
+        : "Parcurgem ideile în ordinea firească, introducând termenii pe rând.",
+  ].join("\n\n");
+
+  const outline =
+    objectives.length > 1
+      ? objectives.slice(0, MAX_ECHOED_OBJECTIVES).map((o) => ({
+          title: clip(o.text.replace(/[.\s]+$/, ""), 120),
+          text: `Aici explicăm punctul: ${o.text.replace(/[.\s]+$/, "")}.`,
+        }))
+      : [
+          {
+            title: "Ideea de bază",
+            text: `Pornim de la ce înseamnă „${topic}” și de ce contează.`,
+          },
+          {
+            title: "Cum funcționează",
+            text: `Urmărim pe rând pașii prin care „${topic}” se aplică.`,
+          },
+          {
+            title: "Greșeli frecvente",
+            text: `Vedem unde se încurcă de obicei cei care învață „${topic}”.`,
+          },
+        ];
+  const sections = outline.map((part) =>
+    [
+      `## ${part.title}`,
+      part.text,
+      policy.hintsEnabled
+        ? "> Indiciu: încearcă mai întâi să formulezi singur ideea, apoi compar-o cu explicația."
+        : "Explicația completă este dată direct, fără indicii separate.",
+    ].join("\n\n"),
+  );
+
+  const excerpts = sourceSentences(input.sourceChunks).slice(0, MAX_EXCERPTS);
+  const fromSource =
+    excerpts.length > 0
+      ? ["## Din materialul profesorului", ...excerpts.map((sentence) => `> ${sentence}`)].join(
+          "\n\n",
+        )
+      : null;
+
+  const steps = policy.scaffolding === "high" ? 4 : policy.scaffolding === "medium" ? 3 : 2;
+  const example = [
+    "## Exemplu rezolvat",
+    `Exemplu pentru „${topic}”:`,
+    ...Array.from({ length: steps }, (_, i) =>
+      policy.scaffolding === "low"
+        ? `- Etapa ${i + 1}: încearcă singur, apoi verifică.`
+        : `${i + 1}. Pasul ${i + 1}: o acțiune mică, explicată separat.`,
+    ),
+  ].join("\n\n");
+
+  const summary = [
+    "## Recapitulare",
+    ...objectives.slice(0, MAX_ECHOED_OBJECTIVES).map((o) => `- ${o.text}`),
+    "_(Text generat de modulul de test (mock), nu de un model AI real.)_",
+  ].join("\n\n");
+
+  return [
+    `# ${topic}`,
+    intro,
+    ...(policy.exampleFirst ? [example, ...sections] : [...sections, example]),
+    ...(fromSource ? [fromSource] : []),
+    summary,
+  ].join("\n\n");
 }
 
 export class MockGenerator implements ContentGenerator {
@@ -95,46 +222,37 @@ export class MockGenerator implements ContentGenerator {
 
   async generateLesson(input: LessonInput): Promise<unknown> {
     const echoed = input.objectives.slice(0, MAX_ECHOED_OBJECTIVES);
-    const objectivesList = input.objectives.map((o) => `- ${o.text}`).join("\n");
-    const explanation = [
-      "## Explicație",
-      `Această lecție acoperă capitolul „${input.chapterTitle}” din ${input.subjectTitle}.`,
-      ...(input.sourceChunks.length > 0
-        ? [
-            `Material pregătit pe baza a ${input.sourceChunks.length} fragment(e) din documentele profesorului.`,
-          ]
-        : ["Material general, fără document sursă de la profesor."]),
-      ...(input.styleNotes?.trim() ? ["Stilul de predare urmează notițele profesorului."] : []),
-    ].join("\n\n");
-    const example = ["## Exemplu rezolvat", ...echoed.map((o, i) => `${i + 1}. ${o.text}`)].join(
-      "\n\n",
+    const sentences = sourceSentences(input.sourceChunks);
+    const checkCount = Math.min(
+      MAX_CHECK_QUESTIONS,
+      Math.max(MIN_CHECK_QUESTIONS, input.objectives.length),
     );
-    const sections = input.policy.exampleFirst ? [example, explanation] : [explanation, example];
-
     return {
       metadata: { generator: "mock" },
       lesson: {
-        body: [
-          `# ${clip(input.chapterTitle, 150)}`,
-          `## Obiective\n${objectivesList}`,
-          ...sections,
-        ].join("\n\n"),
+        body: lessonBody(input),
         examples: echoed.slice(0, 3).map((o, i) => ({
           title: `Exemplu ${i + 1}`,
           body: clip(`Exemplu pentru obiectivul: ${o.text}`, 900),
         })),
-        checkQuestions: echoed.map((o, i) => mcq(i, o)),
+        checkQuestions: Array.from({ length: checkCount }, (_, i) => {
+          const objective = echoed[i % echoed.length];
+          if (!objective) return null;
+          const sentence = sentences[i % Math.max(sentences.length, 1)];
+          return sentence ? mcqFromSource(i, objective, sentence) : mcq(i, objective);
+        }).filter((q) => q !== null),
       },
     };
   }
 
   async generateQuiz(input: QuizInput): Promise<unknown> {
     const objectives = input.objectives;
+    const sentences = sourceSentences(input.sourceChunks);
     return {
       metadata: { generator: "mock" },
       questions: Array.from({ length: input.count }, (_, i) => {
         const objective = objectives[i % objectives.length];
-        return objective ? questionFor(i, objective, input.kind, input.language) : null;
+        return objective ? questionFor(i, objective, input.kind, input.language, sentences) : null;
       }).filter((q) => q !== null),
     };
   }

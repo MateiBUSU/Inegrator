@@ -224,3 +224,43 @@ describe("prompts: teacher text cannot close its own data block", () => {
     expect(neutralizeDelimiters(code)).toBe(code);
   });
 });
+
+describe("lesson prompt: a full, grounded page", () => {
+  it("includes the uploaded document's text as source and demands a sectioned page", () => {
+    const text = "Un graf neorientat are muchii fără sens de parcurgere.";
+    const p = buildLessonPrompt({ ...base, sourceChunks: [text] });
+    expect(p.user).toContain(`<source index="1">\n${text}\n</source>`);
+    expect(p.user).toContain("Ground every section in the SOURCE CHUNKS");
+    expect(p.user).toContain('at least four "##" sections');
+    expect(p.user).toContain("at least 400 words");
+  });
+
+  it("personal lesson: carries the topic title, the student's goal and the policy, and no source", () => {
+    const personal: LessonInput = {
+      ...base,
+      mode: "personal",
+      sourceChunks: [],
+      chapterTitle: "Grafuri",
+      objectives: [
+        { id: "11111111-aaaa-4bbb-8ccc-000000000009", text: "Să înțeleg parcurgerea BFS" },
+      ],
+    };
+    const guided = buildLessonPrompt({
+      ...personal,
+      policy: { ...DEFAULT_POLICY, scaffolding: "high", exampleFirst: true },
+    });
+    const plain = buildLessonPrompt({
+      ...personal,
+      policy: { ...DEFAULT_POLICY, scaffolding: "low", exampleFirst: false },
+    });
+    for (const p of [guided, plain]) {
+      expect(p.user).toContain("CHAPTER: Grafuri");
+      expect(p.user).toContain("Să înțeleg parcurgerea BFS");
+      expect(p.user).toContain("build it around the topic title and the student's goal");
+    }
+    expect(guided.system).toContain("small guided steps");
+    expect(guided.system).toContain("worked example before");
+    expect(plain.system).toContain("minimal guidance");
+    expect(guided.system).not.toBe(plain.system);
+  });
+});

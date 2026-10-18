@@ -18,6 +18,15 @@ export function VerificationBadge({ confirmed }: { confirmed: boolean }) {
   );
 }
 
+/** Marks content written by the canned test provider, so nobody mistakes it for real AI output. */
+export function MockBadge({ provider }: { provider: string | undefined }) {
+  return provider === "mock" ? (
+    <span className="badge badge-mock" title="Generat de modulul de test, nu de un model AI real">
+      Conținut de test (mock)
+    </span>
+  ) : null;
+}
+
 export function ProgressBadge({ state }: { state: StudentProgressState }) {
   return <span className={`badge badge-progress-${state}`}>{PROGRESS_LABELS[state]}</span>;
 }

@@ -98,7 +98,7 @@ const contentShape = {
   lesson: lessonSchema.optional(),
   questions: z.array(questionSchema).max(100).optional(),
   // Set by the generation endpoint only (never accepted from clients); useful for debugging
-  // and never part of the student view.
+  // and, apart from the provider name (shown as a "test content" badge), not part of the student view.
   generation: z
     .object({ provider: z.enum(["mock", "gemini"]), teacherSource: z.boolean() })
     .optional(),
@@ -300,6 +300,8 @@ export const studentMaterialViewSchema = z.object({
     })
     .optional(),
   questions: z.array(studentQuestionSchema).optional(),
+  /** Which AI provider wrote the content; the UI labels "mock" as test content. */
+  provider: z.enum(["mock", "gemini"]).optional(),
 });
 export type StudentMaterialView = z.infer<typeof studentMaterialViewSchema>;
 export const studentMaterialResponseSchema = z.object({ material: studentMaterialViewSchema });
@@ -339,5 +341,6 @@ export function toStudentMaterialView(
         }
       : {}),
     ...(material.questions ? { questions: material.questions.map(toStudentQuestion) } : {}),
+    ...(material.generation ? { provider: material.generation.provider } : {}),
   });
 }

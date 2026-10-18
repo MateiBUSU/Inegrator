@@ -87,13 +87,40 @@ describe("MockGenerator.generateLesson", () => {
     const exampleFirst: Policy = { ...DEFAULT_POLICY, exampleFirst: true };
     const first = (await engine.generateLesson(context(2, { policy: exampleFirst }))).lesson.body;
     const after = (await engine.generateLesson(context(2))).lesson.body;
-    expect(first.indexOf("## Exemplu rezolvat")).toBeLessThan(first.indexOf("## Explicație"));
-    expect(after.indexOf("## Explicație")).toBeLessThan(after.indexOf("## Exemplu rezolvat"));
+    const section = "Aici explicăm punctul";
+    expect(first.indexOf("## Exemplu rezolvat")).toBeLessThan(first.indexOf(section));
+    expect(after.indexOf(section)).toBeLessThan(after.indexOf("## Exemplu rezolvat"));
 
-    const withSource = (await engine.generateLesson(context(1, { sourceChunks: ["a", "b"] })))
-      .lesson.body;
-    expect(withSource).toContain("2 fragment(e)");
-    expect(after).toContain("fără document sursă");
+    const sentence = "Un graf neorientat are muchii care nu au sens de parcurgere.";
+    const withSource = (
+      await engine.generateLesson(context(1, { sourceChunks: [`${sentence} Alta frază.`] }))
+    ).lesson.body;
+    expect(withSource).toContain("## Din materialul profesorului");
+    expect(withSource).toContain(`> ${sentence}`);
+    expect(after).not.toContain("Din materialul profesorului");
+  });
+
+  it("scaffolding changes the number of guided steps in the example", async () => {
+    const steps = async (scaffolding: Policy["scaffolding"]) =>
+      (
+        (
+          await engine.generateLesson(context(1, { policy: { ...DEFAULT_POLICY, scaffolding } }))
+        ).lesson.body.match(/^\d+\. Pasul/gm) ?? []
+      ).length;
+    expect(await steps("high")).toBeGreaterThan(await steps("medium"));
+    expect(await steps("low")).toBe(0);
+  });
+
+  it("is a full page even for one objective: several sections, an example, a summary, 3+ checks", async () => {
+    const { lesson } = await engine.generateLesson(context(1, { mode: "personal" }));
+    const headings = lesson.body.match(/^## .+$/gm) ?? [];
+    expect(headings.length).toBeGreaterThanOrEqual(5);
+    expect(headings).toContain("## Introducere");
+    expect(headings).toContain("## Exemplu rezolvat");
+    expect(headings).toContain("## Recapitulare");
+    expect(lesson.body.length).toBeGreaterThan(600);
+    expect(lesson.checkQuestions.length).toBeGreaterThanOrEqual(3);
+    expect(new Set(lesson.checkQuestions.map((q) => q.id)).size).toBe(lesson.checkQuestions.length);
   });
 });
 
@@ -199,5 +226,21 @@ describe("MockGenerator: other operations and isolation", () => {
     await engine.generateQuiz({ ...context(2), count: 3, kind: "test" });
     await engine.extractStyleNotes({ sampleText: "Un text de probă." });
     expect(fetchSpy).not.toHaveBeenCalled();
+  });
+});
+
+describe("MockGenerator.generateQuiz with a source document", () => {
+  it("builds questions from the document's own sentences", async () => {
+    const sentence = "Un graf neorientat are muchii care nu au sens de parcurgere.";
+    const generated = await engine.generateQuiz({
+      ...context(2, { sourceChunks: [sentence] }),
+      count: 2,
+      kind: "test",
+    });
+    const [q1, q2] = generated.questions;
+    expect(q1?.type).toBe("mcq");
+    expect(JSON.stringify(q1)).toContain(sentence);
+    expect(q2?.type).toBe("short");
+    expect(q2?.prompt).toContain("_____");
   });
 });

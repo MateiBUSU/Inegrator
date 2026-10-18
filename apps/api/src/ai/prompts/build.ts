@@ -102,13 +102,25 @@ function contextLines(input: LessonInput): string[] {
   ].filter((line) => line !== "");
 }
 
+const LESSON_STRUCTURE = [
+  'The "body" is Markdown: a "#" title, then at least four "##" sections: an introduction, the core explanation split into one or more sections, a fully worked example, and a short summary.',
+  "Use full paragraphs (several sentences each), and short lists or code blocks where they help. The body should be at least 400 words.",
+].join("\n");
+
 export function buildLessonPrompt(input: LessonInput): Prompt {
   const user = [
     ...contextLines(input),
-    "TASK: write one lesson covering all the objectives.",
+    "TASK: write one lesson covering all the objectives, as a complete study page and not a summary.",
+    LESSON_STRUCTURE,
+    input.sourceChunks.length > 0
+      ? "Ground every section in the SOURCE CHUNKS: explain what they say about the objectives and do not substitute generic content for it. If the chunks do not cover an objective, say so briefly instead of inventing."
+      : "",
+    input.mode === "personal"
+      ? "The lesson is for one student: build it around the topic title and the student's goal listed above."
+      : "",
     "Output shape:",
     '{"lesson":{"body":"<markdown>","examples":[{"title":"...","body":"..."}],"checkQuestions":[<question>, ...]}}',
-    "Write 2-5 check questions in checkQuestions.",
+    "Write 3-5 check questions in checkQuestions.",
     QUESTION_RULES,
   ].join("\n\n");
   return {
