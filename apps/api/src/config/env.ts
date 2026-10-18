@@ -8,6 +8,8 @@ const envSchema = z
     PORT: z.coerce.number().int().min(1).max(65535).default(3001),
     NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
     CORS_ORIGIN: z.string().url().default("http://localhost:5173"),
+    // Directory of the built web app (Vite dist). When set, the API also serves it; unset in dev.
+    WEB_DIST_DIR: z.preprocess(emptyToUndefined, z.string().min(1).optional()),
     // Interface to bind. Unset keeps Node's default (all interfaces).
     HOST: z.preprocess(emptyToUndefined, z.string().min(1).optional()),
     // Development only: also accept browser origins from private LAN addresses (see lan-origin.ts).

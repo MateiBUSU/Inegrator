@@ -14,6 +14,7 @@ import { createMaterialsRouter, createSubjectsRouter } from "./routes/materials-
 import { createMeRouter } from "./routes/me-routes";
 import { createPracticeRouter } from "./routes/practice-routes";
 import { createTopicsRouter } from "./routes/topics-routes";
+import { mountWebApp } from "./web-static";
 
 export function createApp() {
   const app = express();
@@ -47,6 +48,9 @@ export function createApp() {
   app.use("/api/objectives", createPracticeRouter());
   app.use("/api/me/topics", createTopicsRouter());
   app.use("/api/me", createMeRouter());
+
+  // Optional: serve the built web app from this process (production on a single host).
+  if (env.WEB_DIST_DIR) mountWebApp(app, env.WEB_DIST_DIR);
 
   app.use(notFoundHandler);
   app.use(errorHandler);
