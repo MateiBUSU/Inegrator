@@ -1,4 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
+import { isQuotaError } from "./gemini-keys";
 import type {
   ContentGenerator,
   LessonInput,
@@ -32,24 +33,68 @@ import {
 
 export const GEMINI_TIMEOUT_MS = 90_000;
 
+// How long a key that hit its quota is skipped when there are other keys to use. Per-minute
+// limits recover on their own; a daily limit costs one cheap failed call per window.
+export const KEY_COOLDOWN_MS = 60_000;
+
 export class GeminiGenerator implements ContentGenerator {
   readonly provider = "gemini" as const;
-  private readonly client: GoogleGenAI;
+  private readonly clients: GoogleGenAI[];
+  /** Index of the key in use; moves on only after a quota error (see callJson). */
+  private active = 0;
+  private readonly exhaustedUntil: number[];
 
   constructor(
-    apiKey: string,
+    apiKeys: string | readonly string[],
     private readonly model: string,
   ) {
-    this.client = new GoogleGenAI({ apiKey });
+    const keys = typeof apiKeys === "string" ? [apiKeys] : apiKeys;
+    this.clients = keys.map((apiKey) => new GoogleGenAI({ apiKey }));
+    this.exhaustedUntil = keys.map(() => 0);
   }
 
+  /**
+   * One request, with key rotation on quota errors only. With several keys, a 429 marks the
+   * current key as exhausted for a while and the SAME request is sent with the next usable key;
+   * other errors (timeouts, 503 "high demand", bad output) are thrown as they are, so the
+   * engine's retry-once-with-the-same-key behavior is unchanged. If every key is exhausted the
+   * quota error is thrown (the engine turns it into AI_UNAVAILABLE): bounded, no loop. With a
+   * single key nothing is tracked and the behavior is exactly the old one.
+   */
   private async callJson(prompt: Prompt): Promise<unknown> {
+    const count = this.clients.length;
+    for (let tried = 0; ; tried++) {
+      try {
+        return await this.callWith(this.clients[this.active] as GoogleGenAI, prompt);
+      } catch (error) {
+        if (count === 1 || !isQuotaError(error)) throw error;
+        this.exhaustedUntil[this.active] = Date.now() + KEY_COOLDOWN_MS;
+        const next = this.nextUsableKey();
+        if (next === null || tried + 1 >= count) throw error;
+        console.error(
+          `Gemini key ${this.active + 1} of ${count} hit its quota: switched to key ${next + 1}`,
+        );
+        this.active = next;
+      }
+    }
+  }
+
+  private nextUsableKey(): number | null {
+    const now = Date.now();
+    for (let step = 1; step < this.clients.length; step++) {
+      const index = (this.active + step) % this.clients.length;
+      if ((this.exhaustedUntil[index] ?? 0) <= now) return index;
+    }
+    return null;
+  }
+
+  private async callWith(client: GoogleGenAI, prompt: Prompt): Promise<unknown> {
     // Two layers: the SDK's own request timeout and an abort signal, so a hung call cannot
     // outlive GEMINI_TIMEOUT_MS.
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), GEMINI_TIMEOUT_MS);
     try {
-      const response = await this.client.models.generateContent({
+      const response = await client.models.generateContent({
         model: this.model,
         contents: prompt.user,
         config: {

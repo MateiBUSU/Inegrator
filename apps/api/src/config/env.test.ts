@@ -14,6 +14,7 @@ async function loadEnv(overrides: Record<string, string | undefined> = {}) {
     ...VALID,
     AI_PROVIDER: undefined,
     GEMINI_API_KEY: undefined,
+    GEMINI_API_KEYS: undefined,
     GEMINI_MODEL: undefined,
     AI_DAILY_LIMIT_PER_TEACHER: undefined,
     ...overrides,
@@ -95,5 +96,25 @@ describe("LAN origins setting", () => {
       "exit(1)",
     );
     expect(message()).toContain("ALLOW_LAN_ORIGINS");
+  });
+});
+
+describe("Gemini keys setting", () => {
+  it("accepts a list instead of a single key", async () => {
+    const env = await loadEnv({ AI_PROVIDER: "gemini", GEMINI_API_KEYS: "a,b" });
+    expect(env.GEMINI_API_KEYS).toBe("a,b");
+  });
+
+  it("still accepts the single GEMINI_API_KEY alone (backward compatible)", async () => {
+    const env = await loadEnv({ AI_PROVIDER: "gemini", GEMINI_API_KEY: "only-key" });
+    expect(env.GEMINI_API_KEY).toBe("only-key");
+    expect(env.GEMINI_API_KEYS).toBeUndefined();
+  });
+
+  it("requires at least one key when AI_PROVIDER=gemini", async () => {
+    await expect(loadEnv({ AI_PROVIDER: "gemini", GEMINI_API_KEYS: " , " })).rejects.toThrow(
+      "exit(1)",
+    );
+    expect(message()).toContain("GEMINI_API_KEY or GEMINI_API_KEYS");
   });
 });

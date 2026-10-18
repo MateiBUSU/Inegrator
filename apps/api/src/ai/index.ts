@@ -1,5 +1,6 @@
 import { env } from "../config/env";
 import { createAiEngine, type AiEngine } from "./engine";
+import { resolveGeminiKeys } from "./gemini-keys";
 import type { ContentGenerator } from "./generator";
 import { MockGenerator } from "./mock-generator";
 
@@ -23,8 +24,8 @@ async function configuredProvider(): Promise<ContentGenerator> {
   if (env.AI_PROVIDER === "gemini") {
     // Loaded lazily so the SDK is never imported unless Gemini is explicitly enabled.
     const { GeminiGenerator } = await import("./gemini-generator");
-    // env validation guarantees the key is present when AI_PROVIDER=gemini.
-    return new GeminiGenerator(env.GEMINI_API_KEY ?? "", env.GEMINI_MODEL);
+    // env validation guarantees at least one key is present when AI_PROVIDER=gemini.
+    return new GeminiGenerator(resolveGeminiKeys(env), env.GEMINI_MODEL);
   }
   return new MockGenerator();
 }

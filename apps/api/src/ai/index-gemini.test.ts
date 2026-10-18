@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 // and the Gemini generator module are replaced. This only checks setup and failure mapping; the
 // real Gemini client is never constructed and never called.
 const state = vi.hoisted(() => ({
-  constructed: [] as { apiKey: string; model: string }[],
+  constructed: [] as { apiKey: string | readonly string[]; model: string }[],
   failOnConstruct: false,
 }));
 
@@ -15,7 +15,7 @@ vi.mock("../config/env", () => ({
 vi.mock("./gemini-generator", () => ({
   GeminiGenerator: class {
     readonly provider = "gemini" as const;
-    constructor(apiKey: string, model: string) {
+    constructor(apiKey: string | readonly string[], model: string) {
       if (state.failOnConstruct) throw new Error("SDK failed to initialise");
       state.constructed.push({ apiKey, model });
     }
@@ -37,7 +37,7 @@ describe("AI provider selection with AI_PROVIDER=gemini", () => {
     const { getAiEngine } = await import("./index");
     const engine = await getAiEngine();
     expect(engine.provider).toBe("gemini");
-    expect(state.constructed).toEqual([{ apiKey: "fake-key-for-test", model: "fake-model" }]);
+    expect(state.constructed).toEqual([{ apiKey: ["fake-key-for-test"], model: "fake-model" }]);
     // The engine is cached: the provider is constructed once.
     await getAiEngine();
     expect(state.constructed).toHaveLength(1);

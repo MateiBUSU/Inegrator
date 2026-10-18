@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { resolveGeminiKeys } from "../ai/gemini-keys";
 
 const emptyToUndefined = (value: unknown) => (value === "" ? undefined : value);
 
@@ -29,6 +30,9 @@ const envSchema = z
     AI_PROVIDER: z.enum(["mock", "gemini"]).default("mock"),
     // An empty value (as in a copied .env.example) counts as unset.
     GEMINI_API_KEY: z.preprocess(emptyToUndefined, z.string().min(1).optional()),
+    // Several keys, comma-separated: the next one is used when the current one runs out of quota.
+    // Takes precedence over GEMINI_API_KEY when both are set.
+    GEMINI_API_KEYS: z.preprocess(emptyToUndefined, z.string().min(1).optional()),
     GEMINI_MODEL: z.preprocess(emptyToUndefined, z.string().min(1).default("gemini-3.8-flash")),
     // Generations (and style-notes suggestions) each teacher may request per UTC day.
     AI_DAILY_LIMIT_PER_TEACHER: z.coerce.number().int().min(0).max(10_000).default(20),
@@ -37,11 +41,11 @@ const envSchema = z
     AI_DAILY_LIMIT_PER_STUDENT: z.coerce.number().int().min(0).max(10_000).default(30),
   })
   .superRefine((value, ctx) => {
-    if (value.AI_PROVIDER === "gemini" && !value.GEMINI_API_KEY) {
+    if (value.AI_PROVIDER === "gemini" && resolveGeminiKeys(value).length === 0) {
       ctx.addIssue({
         code: "custom",
         path: ["GEMINI_API_KEY"],
-        message: "required when AI_PROVIDER=gemini",
+        message: "GEMINI_API_KEY or GEMINI_API_KEYS is required when AI_PROVIDER=gemini",
       });
     }
     if (value.ALLOW_LAN_ORIGINS && value.NODE_ENV !== "development") {
