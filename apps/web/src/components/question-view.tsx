@@ -31,6 +31,12 @@ export function QuestionView({ question, number }: { question: Question; number:
           Răspunsuri acceptate: <strong>{(question.acceptedAnswers ?? []).join(", ")}</strong>
         </p>
       ) : null}
+      {question.type === "reasoning" ? (
+        <>
+          <p>Răspuns de referință (folosit de AI la evaluare; elevii nu îl văd):</p>
+          <SafeMarkdown>{question.referenceSolution ?? ""}</SafeMarkdown>
+        </>
+      ) : null}
       {question.type === "programming" ? (
         <>
           <p>Soluție de referință:</p>

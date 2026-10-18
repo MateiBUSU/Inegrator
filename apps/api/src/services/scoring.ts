@@ -1,13 +1,15 @@
 import {
   allQuestions,
+  REASONING_POINTS,
   type MaterialDefinition,
   type Question,
   type QuestionResult,
+  type ReasoningVerdict,
   type SubmittedAnswer,
 } from "@app/shared";
 
 export interface ScoredAttempt {
-  /** Number of auto-scored questions answered correctly (1 point each). */
+  /** Points over the auto-scored questions: 1 per correct one, 0.5 per PARTIAL reasoning answer. */
   score: number;
   /** Number of auto-scored questions; programming questions are not counted. */
   maxScore: number;
@@ -28,7 +30,16 @@ function sameSet(a: readonly string[], b: readonly string[]): boolean {
   return left.size === right.size && [...left].every((item) => right.has(item));
 }
 
-function gradeQuestion(question: Question, answer: SubmittedAnswer | undefined): QuestionResult {
+/** AI verdicts of the reasoning answers, by question id (see attempt-service). */
+export type ReasoningVerdicts = ReadonlyMap<string, ReasoningVerdict>;
+
+const NO_ANSWER_FEEDBACK = "Nu ai trimis niciun răspuns la această întrebare.";
+
+function gradeQuestion(
+  question: Question,
+  answer: SubmittedAnswer | undefined,
+  verdicts: ReasoningVerdicts,
+): QuestionResult {
   const base = {
     questionId: question.id,
     objectiveId: question.objectiveId,
@@ -54,6 +65,24 @@ function gradeQuestion(question: Question, answer: SubmittedAnswer | undefined):
     };
   }
 
+  if (question.type === "reasoning") {
+    // The reference answer (referenceSolution) is deliberately not part of the result, and the
+    // teacher's explanation is left out too: it could restate it.
+    const text = answer?.text ?? "";
+    const given = verdicts.get(question.id);
+    const verdict = given?.verdict ?? "GRESIT";
+    return {
+      questionId: question.id,
+      objectiveId: question.objectiveId,
+      type: "reasoning",
+      text,
+      verdict,
+      points: REASONING_POINTS[verdict],
+      feedback: given?.feedback ?? NO_ANSWER_FEEDBACK,
+      ...(given?.explanation ? { reexplanation: given.explanation } : {}),
+    };
+  }
+
   return {
     ...base,
     type: "programming",
@@ -71,15 +100,18 @@ function gradeQuestion(question: Question, answer: SubmittedAnswer | undefined):
 export function scoreAttempt(
   material: Pick<MaterialDefinition, "lesson" | "questions">,
   answers: readonly SubmittedAnswer[],
+  verdicts: ReasoningVerdicts = new Map(),
 ): ScoredAttempt {
   const byQuestion = new Map(answers.map((answer) => [answer.questionId, answer]));
   const results = allQuestions(material).map((question) =>
-    gradeQuestion(question, byQuestion.get(question.id)),
+    gradeQuestion(question, byQuestion.get(question.id), verdicts),
   );
 
   const scored = results.filter((result) => result.type !== "programming");
+  const points = (result: QuestionResult): number =>
+    result.type === "reasoning" ? result.points : "isCorrect" in result && result.isCorrect ? 1 : 0;
   return {
-    score: scored.filter((result) => "isCorrect" in result && result.isCorrect).length,
+    score: scored.reduce((sum, result) => sum + points(result), 0),
     maxScore: scored.length,
     selfEvaluationCount: results.length - scored.length,
     results,

@@ -146,7 +146,7 @@ describe("MockGenerator.generateQuiz", () => {
       new Set(
         (await engine.generateQuiz({ ...context(2), count: 6, kind })).questions.map((q) => q.type),
       );
-    expect(await types("test")).toEqual(new Set(["mcq", "short"]));
+    expect(await types("test")).toEqual(new Set(["mcq", "short", "reasoning"]));
     expect(await types("problem")).toEqual(new Set(["programming"]));
     expect(await types("exercise")).toEqual(new Set(["short", "programming"]));
   });
@@ -242,5 +242,50 @@ describe("MockGenerator.generateQuiz with a source document", () => {
     expect(JSON.stringify(q1)).toContain(sentence);
     expect(q2?.type).toBe("short");
     expect(q2?.prompt).toContain("_____");
+  });
+});
+
+describe("MockGenerator.generateQuiz: reasoning questions", () => {
+  it("adds one open question to a class test of 4+, never to personal or short tests", async () => {
+    const types = async (count: number, mode?: "personal") =>
+      (
+        await engine.generateQuiz({
+          ...context(2, mode ? { mode } : {}),
+          count,
+          kind: "test",
+        })
+      ).questions.map((q) => q.type);
+    const class6 = await types(6);
+    expect(class6.filter((t) => t === "reasoning")).toHaveLength(1);
+    expect(class6[2]).toBe("reasoning");
+    expect(await types(3)).not.toContain("reasoning");
+    expect(await types(6, "personal")).not.toContain("reasoning");
+
+    const q = (await engine.generateQuiz({ ...context(2), count: 6, kind: "test" })).questions[2];
+    expect(q?.referenceSolution?.length).toBeGreaterThan(20);
+  });
+
+  it("grades by keyword overlap with the reference and never repeats the reference", async () => {
+    const input = {
+      subjectTitle: "s",
+      chapterTitle: "c",
+      objective: { id: "o", text: "Compară" },
+      question: "Compară BFS și DFS.",
+      referenceAnswer: "Parcurgerea lățime folosește coadă; parcurgerea adâncime folosește stivă.",
+      policy: DEFAULT_POLICY,
+    };
+    const grade = async (studentAnswer: string) =>
+      new MockGenerator().gradeReasoningAnswer({ ...input, studentAnswer });
+    expect(
+      (await grade("Parcurgerea lățime folosește coadă, adâncime folosește stivă")) as {
+        verdict: string;
+      },
+    ).toMatchObject({ verdict: "CORECT" });
+    expect((await grade("Parcurgerea în lățime")) as { verdict: string }).toMatchObject({
+      verdict: "PARTIAL",
+    });
+    const wrong = (await grade("nu știu")) as { verdict: string; feedback: string };
+    expect(wrong.verdict).toBe("GRESIT");
+    expect(wrong.feedback).not.toContain("folosește stivă");
   });
 });

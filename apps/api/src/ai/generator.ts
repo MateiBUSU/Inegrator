@@ -85,6 +85,21 @@ export interface PracticeDiagnosisInput extends PracticeContext {
 }
 
 /**
+ * One free-text answer to grade against the stored reference answer. `referenceAnswer` is the
+ * answer key: it goes to the provider only, never to a client. No student identity.
+ */
+export interface ReasoningGradeInput {
+  subjectTitle: string;
+  chapterTitle: string;
+  objective: Objective;
+  language?: "cpp" | "python";
+  question: string;
+  referenceAnswer: string;
+  studentAnswer: string;
+  policy: Policy;
+}
+
+/**
  * Raw provider interface. Every method returns `unknown`: nothing a provider returns is trusted
  * until the engine has validated it (see engine.ts).
  */
@@ -97,4 +112,5 @@ export interface ContentGenerator {
   tutorReply(input: TutorInput): Promise<unknown>;
   generatePracticeExercise(input: PracticeExerciseInput): Promise<unknown>;
   diagnosePracticeAnswer(input: PracticeDiagnosisInput): Promise<unknown>;
+  gradeReasoningAnswer(input: ReasoningGradeInput): Promise<unknown>;
 }

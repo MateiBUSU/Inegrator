@@ -5,7 +5,8 @@ export const sectionSchema = z.enum(["programa", "bac"]);
 export const languageSchema = z.enum(["cpp", "python"]);
 export const materialKindSchema = z.enum(["lesson", "test", "problem", "exercise"]);
 export const materialStatusSchema = z.enum(["draft", "published", "archived"]);
-export const questionTypeSchema = z.enum(["mcq", "short", "programming"]);
+// "reasoning": free-text explanation that an AI judges against the stored referenceSolution.
+export const questionTypeSchema = z.enum(["mcq", "short", "programming", "reasoning"]);
 export const verificationSchema = z.enum([
   "unchecked",
   "agrees",
@@ -27,7 +28,7 @@ export const objectiveRefSchema = z.object({ id: idSchema, text: text(500).min(1
 // ---------------------------------------------------------------------------
 
 interface QuestionShape {
-  type: "mcq" | "short" | "programming";
+  type: "mcq" | "short" | "programming" | "reasoning";
   options?: { id: string }[] | undefined;
   correct?: string[] | undefined;
   acceptedAnswers?: string[] | undefined;
@@ -52,7 +53,8 @@ function checkQuestionShape(q: QuestionShape, add: AddIssue): void {
       add(["acceptedAnswers"], "short questions need at least one accepted answer");
     }
   } else if (!q.referenceSolution || q.referenceSolution.trim() === "") {
-    add(["referenceSolution"], "programming questions need a reference solution");
+    // programming and reasoning both carry a full reference answer in referenceSolution
+    add(["referenceSolution"], `${q.type} questions need a reference solution`);
   }
 }
 
@@ -64,7 +66,7 @@ export const questionSchema = z
     options: z.array(optionSchema).max(10).optional(),
     correct: z.array(idSchema).max(10).optional(), // mcq: ids of the correct options
     acceptedAnswers: z.array(text(500).min(1)).max(20).optional(), // short
-    referenceSolution: text(20000).optional(), // programming
+    referenceSolution: text(20000).optional(), // programming code, or the full reference answer of reasoning
     rubric: text(5000).optional(), // programming
     explanation: text(5000).optional(),
     objectiveId: idSchema,

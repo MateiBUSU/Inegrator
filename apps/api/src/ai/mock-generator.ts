@@ -6,6 +6,7 @@ import type {
   PracticeDiagnosisInput,
   PracticeExerciseInput,
   QuizInput,
+  ReasoningGradeInput,
   SolveInput,
   StyleNotesInput,
   TutorInput,
@@ -125,6 +126,33 @@ function questionFor(
   if (index % 2 === 0)
     return sentence ? mcqFromSource(index, objective, sentence) : mcq(index, objective);
   return sentence ? shortFromSource(index, objective, sentence) : short(index, objective);
+}
+
+/** A class test with 4+ questions gets one open "reasoning" question, as the real prompt asks. */
+const REASONING_INDEX = 2;
+
+function reasoning(index: number, objective: Objective, sentences: string[]) {
+  const reference =
+    sentences.length > 0
+      ? sentences.slice(0, 3).join(" ")
+      : `Răspunsul complet pentru: ${objective.text} Explică ideea principală, motivul și un exemplu scurt. (referință mock)`;
+  return {
+    id: `q${index + 1}`,
+    type: "reasoning" as const,
+    prompt: clip(`Explică în câteva propoziții: ${objective.text}`, 900),
+    referenceSolution: clip(reference, 4000),
+    objectiveId: objective.id,
+  };
+}
+
+/** Words of at least 5 letters, lowercased: what the mock grader compares. */
+function keywords(text: string): Set<string> {
+  return new Set(
+    text
+      .toLowerCase()
+      .split(/[^\p{L}\p{N}]+/u)
+      .filter((word) => word.length >= 5),
+  );
 }
 
 const MIN_CHECK_QUESTIONS = 3;
@@ -252,7 +280,12 @@ export class MockGenerator implements ContentGenerator {
       metadata: { generator: "mock" },
       questions: Array.from({ length: input.count }, (_, i) => {
         const objective = objectives[i % objectives.length];
-        return objective ? questionFor(i, objective, input.kind, input.language, sentences) : null;
+        if (!objective) return null;
+        const withReasoning =
+          input.mode !== "personal" && (input.kind ?? "test") === "test" && input.count >= 4;
+        return withReasoning && i === REASONING_INDEX
+          ? reasoning(i, objective, sentences)
+          : questionFor(i, objective, input.kind, input.language, sentences);
       }).filter((q) => q !== null),
     };
   }
@@ -307,6 +340,32 @@ export class MockGenerator implements ContentGenerator {
           : "Începem cu explicația, apoi un exemplu.",
         "(Răspuns generat de mock; nu este conținut real.)",
       ].join("\n\n"),
+    };
+  }
+
+  // Deterministic: the share of the reference's keywords found in the answer decides the verdict
+  // (>= 50% CORECT, >= 20% PARTIAL, else GRESIT). The feedback never repeats the reference.
+  async gradeReasoningAnswer(input: ReasoningGradeInput): Promise<unknown> {
+    const wanted = keywords(input.referenceAnswer);
+    const given = keywords(input.studentAnswer);
+    const found = [...wanted].filter((word) => given.has(word)).length;
+    const share = wanted.size === 0 ? 0 : found / wanted.size;
+    const verdict = share >= 0.5 ? "CORECT" : share >= 0.2 ? "PARTIAL" : "GRESIT";
+    return {
+      metadata: { generator: "mock" },
+      verdict,
+      feedback: clip(
+        `Răspunsul tău „${clip(input.studentAnswer, 120)}” acoperă aproximativ ${Math.round(share * 100)}% din ideile esențiale ale răspunsului de referință. (Evaluare generată de mock.)`,
+        2500,
+      ),
+      ...(verdict === "CORECT"
+        ? {}
+        : {
+            explanation: clip(
+              `Reia ideea obiectivului „${input.objective.text}” și formulează răspunsul cu termenii cheie. (Explicație generată de mock.)`,
+              3500,
+            ),
+          }),
     };
   }
 

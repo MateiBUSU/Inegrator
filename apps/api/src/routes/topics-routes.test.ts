@@ -358,6 +358,7 @@ function capturing() {
     },
     generatePracticeExercise: (input) => mock.generatePracticeExercise(input),
     diagnosePracticeAnswer: (input) => mock.diagnosePracticeAnswer(input),
+    gradeReasoningAnswer: (input) => mock.gradeReasoningAnswer(input),
   };
   return { provider, seen };
 }

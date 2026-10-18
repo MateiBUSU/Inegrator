@@ -24,6 +24,7 @@ export const QUESTION_TYPE_LABELS: Record<QuestionType, string> = {
   mcq: "Alegere multiplă",
   short: "Răspuns scurt",
   programming: "Programare",
+  reasoning: "Răspuns deschis",
 };
 
 export const LANGUAGE_LABELS = { cpp: "C++", python: "Python" } as const;

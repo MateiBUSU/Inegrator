@@ -3,6 +3,7 @@ import {
   generatedLessonSchema,
   generatedQuizSchema,
   practiceDiagnosisSchema,
+  reasoningVerdictSchema,
   solvedQuestionsSchema,
   styleNotesSuggestionSchema,
   tutorReplySchema,
@@ -10,6 +11,7 @@ import {
   type GeneratedLesson,
   type GeneratedQuiz,
   type PracticeDiagnosis,
+  type ReasoningVerdict,
   type Question,
   type SolvedQuestions,
   type StyleNotesSuggestion,
@@ -23,6 +25,7 @@ import type {
   PracticeDiagnosisInput,
   PracticeExerciseInput,
   QuizInput,
+  ReasoningGradeInput,
   SolveInput,
   StyleNotesInput,
   TutorInput,
@@ -41,6 +44,7 @@ export interface AiEngine {
   tutorReply(input: TutorInput): Promise<TutorReply>;
   generatePracticeExercise(input: PracticeExerciseInput): Promise<GeneratedExercise>;
   diagnosePracticeAnswer(input: PracticeDiagnosisInput): Promise<PracticeDiagnosis>;
+  gradeReasoningAnswer(input: ReasoningGradeInput): Promise<ReasoningVerdict>;
 }
 
 const MAX_ATTEMPTS = 2; // the first call plus exactly one retry with the same input
@@ -161,6 +165,13 @@ export function createAiEngine(provider: ContentGenerator): AiEngine {
         provider.provider,
         () => provider.diagnosePracticeAnswer(input),
         (raw) => practiceDiagnosisSchema.parse(raw),
+      ),
+
+    gradeReasoningAnswer: (input) =>
+      validatedCall(
+        provider.provider,
+        () => provider.gradeReasoningAnswer(input),
+        (raw) => reasoningVerdictSchema.parse(raw),
       ),
   };
 }

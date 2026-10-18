@@ -283,3 +283,34 @@ describe("generation metadata", () => {
     ).toBe(false);
   });
 });
+
+describe("reasoning questions", () => {
+  const reasoning = {
+    id: "r1",
+    type: "reasoning",
+    prompt: "Compară BFS și DFS.",
+    referenceSolution: "BFS folosește o coadă, DFS o stivă.",
+    objectiveId: "o1",
+  };
+
+  it("is valid with a full reference answer and invalid without one", () => {
+    expect(questionSchema.safeParse(reasoning).success).toBe(true);
+    const missing = questionSchema.safeParse({ ...reasoning, referenceSolution: " " });
+    expect(missing.success).toBe(false);
+    expect(messages(missing)).toContain("reasoning questions need a reference solution");
+  });
+
+  it("the student view keeps the type and prompt and drops the reference answer", () => {
+    const view = toStudentMaterialView({
+      ...materialDefinitionSchema.parse({ ...test, questions: [reasoning] }),
+      id: "11111111-1111-4111-8111-111111111111",
+      version: 1,
+    });
+    expect(view.questions?.[0]).toEqual({
+      id: "r1",
+      type: "reasoning",
+      prompt: "Compară BFS și DFS.",
+      objectiveId: "o1",
+    });
+  });
+});

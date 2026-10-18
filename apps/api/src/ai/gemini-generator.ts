@@ -5,6 +5,7 @@ import type {
   PracticeDiagnosisInput,
   PracticeExerciseInput,
   QuizInput,
+  ReasoningGradeInput,
   SolveInput,
   StyleNotesInput,
   TutorInput,
@@ -14,6 +15,7 @@ import {
   buildPracticeDiagnosisPrompt,
   buildPracticeExercisePrompt,
   buildQuizPrompt,
+  buildReasoningGradePrompt,
   buildSolvePrompt,
   buildStyleNotesPrompt,
   buildTutorPrompt,
@@ -92,5 +94,9 @@ export class GeminiGenerator implements ContentGenerator {
 
   diagnosePracticeAnswer(input: PracticeDiagnosisInput): Promise<unknown> {
     return this.callJson(buildPracticeDiagnosisPrompt(input));
+  }
+
+  gradeReasoningAnswer(input: ReasoningGradeInput): Promise<unknown> {
+    return this.callJson(buildReasoningGradePrompt(input));
   }
 }

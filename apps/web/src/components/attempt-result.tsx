@@ -12,6 +12,17 @@ interface AttemptResultProps {
   questions: readonly StudentQuestion[];
 }
 
+/** Whole points, or with a comma for the half point (Romanian decimal): 2,5. */
+function formatPoints(points: number): string {
+  return Number.isInteger(points) ? String(points) : String(points).replace(".", ",");
+}
+
+const VERDICT_LABELS = {
+  CORECT: "Corect",
+  PARTIAL: "Parțial corect",
+  GRESIT: "Greșit",
+} as const;
+
 /** The score and, per question, the answer key. Shown only after the attempt was submitted. */
 export function AttemptResult({ result, questions }: AttemptResultProps) {
   const byId = new Map(questions.map((question) => [question.id, question]));
@@ -20,7 +31,7 @@ export function AttemptResult({ result, questions }: AttemptResultProps) {
     <div className="attempt-result">
       <section className="card" aria-label="Scor">
         <h2>
-          Scor: {result.score} din {result.maxScore}
+          Scor: {formatPoints(result.score)} din {result.maxScore}
           {percent === null ? "" : ` · ${percent}%`}
         </h2>
         {result.selfEvaluationCount > 0 ? (
@@ -60,6 +71,10 @@ function QuestionResultView({
         <span className="muted">{QUESTION_TYPE_LABELS[item.type]}</span>
         {item.type === "programming" ? (
           <span className="badge">Autoevaluare</span>
+        ) : item.type === "reasoning" ? (
+          <span className={`badge badge-verdict-${item.verdict.toLowerCase()}`}>
+            {VERDICT_LABELS[item.verdict]}
+          </span>
         ) : item.isCorrect ? (
           <span className="result-correct">Corect</span>
         ) : (
@@ -99,6 +114,27 @@ function QuestionResultView({
               Răspunsuri acceptate: <strong>{item.acceptedAnswers.join(", ")}</strong>
             </p>
           )}
+        </>
+      ) : null}
+
+      {item.type === "reasoning" ? (
+        <>
+          <p>Răspunsul tău:</p>
+          <blockquote className="student-answer">
+            {item.text === "" ? "(fără răspuns)" : item.text}
+          </blockquote>
+          <p>
+            <strong>Evaluare:</strong> {VERDICT_LABELS[item.verdict]} ({item.points} din 1 punct)
+          </p>
+          <SafeMarkdown>{item.feedback}</SafeMarkdown>
+          {item.reexplanation ? (
+            <div className="explanation">
+              <p>
+                <strong>Pe înțelesul tău:</strong>
+              </p>
+              <SafeMarkdown>{item.reexplanation}</SafeMarkdown>
+            </div>
+          ) : null}
         </>
       ) : null}
 

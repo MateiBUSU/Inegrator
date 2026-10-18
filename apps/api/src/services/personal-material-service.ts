@@ -101,9 +101,11 @@ async function generate(
     request.kind === "lesson"
       ? { lesson: (await engine.generateLesson(context)).lesson }
       : {
+          // Reasoning questions are graded against a stored reference answer and are class-only for
+          // now; the personal prompt never asks for them, and any that slip through are dropped.
           questions: (
             await engine.generateQuiz({ ...context, count: request.count, kind: request.kind })
-          ).questions,
+          ).questions.filter((q) => q.type !== "reasoning"),
         };
 
   // Nothing is saved unless the whole content validates.

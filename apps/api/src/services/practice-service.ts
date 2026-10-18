@@ -226,7 +226,8 @@ export async function submitPractice(
   const submittedAnswer =
     question.type === "mcq" ? (answer.optionIds ?? []).join(",") : (answer.text?.trim() ?? "");
   const graded = scoreAttempt({ questions: [question] }, [submitted]).results[0];
-  const isCorrect = graded?.type !== "programming" && graded !== undefined && graded.isCorrect;
+  const isCorrect =
+    graded !== undefined && (graded.type === "mcq" || graded.type === "short") && graded.isCorrect;
 
   const attemptsCount = progress.attemptsCount + 1;
   const precedingStrategy = progress.strategiesTried.at(-1) ?? null;

@@ -320,7 +320,8 @@ model QuizAttempt {
   studentId   String   @map("student_id") @db.Uuid
   materialId  String   @map("material_id") @db.Uuid
   submittedAt DateTime @default(now()) @map("submitted_at") @db.Timestamptz(6)
-  score       Int
+  // Whole points plus 0.5 for each PARTIAL reasoning answer.
+  score       Float
   maxScore    Int      @map("max_score")
 
   student  User            @relation(fields: [studentId], references: [id])

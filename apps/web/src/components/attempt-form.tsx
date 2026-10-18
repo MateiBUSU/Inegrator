@@ -1,6 +1,6 @@
 import type { StudentQuestion, SubmitAttemptRequest } from "@app/shared";
 import { useState } from "react";
-import { userMessage } from "../api";
+import { ApiError, userMessage } from "../api";
 import { buildAttemptPayload, type AnswerDraft, type AnswerDrafts } from "../lib/attempt-payload";
 import { ErrorState } from "./error-state";
 import { StudentQuestionField } from "./student-question-field";
@@ -36,7 +36,14 @@ export function AttemptForm({
     try {
       await onSubmit(built.payload);
     } catch (err) {
-      setError(userMessage(err));
+      // The only AI call in a submission is the grading of open answers. When it fails nothing
+      // was saved, and the written answers are still in this form to send again.
+      const grading = questions.some((question) => question.type === "reasoning");
+      setError(
+        grading && err instanceof ApiError && err.code === "AI_UNAVAILABLE"
+          ? "Nu am putut evalua răspunsurile acum. Ce ai scris a rămas în formular: încearcă din nou peste puțin timp."
+          : userMessage(err),
+      );
     } finally {
       setSubmitting(false);
     }

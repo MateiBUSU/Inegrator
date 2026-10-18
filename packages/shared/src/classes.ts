@@ -87,7 +87,7 @@ export const studentProgressResponseSchema = z.object({
     z.object({
       id: z.uuid(),
       material_id: z.uuid(),
-      score: z.number().int(),
+      score: z.number(),
       max_score: z.number().int(),
       submitted_at: z.string(),
     }),

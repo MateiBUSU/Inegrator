@@ -42,6 +42,7 @@ describe("AI provider selection", () => {
       tutorReply: async () => ({}),
       generatePracticeExercise: async () => ({}),
       diagnosePracticeAnswer: async () => ({}),
+      gradeReasoningAnswer: async () => ({}),
     });
     expect((await getAiEngine()).provider).toBe("gemini");
     setAiProviderForTesting(null);

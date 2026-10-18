@@ -9,4 +9,5 @@ export * from "./materials";
 export * from "./personal";
 export * from "./policy";
 export * from "./practice";
+export * from "./reasoning";
 export * from "./safe-text";

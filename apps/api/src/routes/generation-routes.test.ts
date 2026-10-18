@@ -232,6 +232,7 @@ function capturing(overrides: Partial<ContentGenerator> = {}) {
     tutorReply: (input) => mock.tutorReply(input),
     generatePracticeExercise: (input) => mock.generatePracticeExercise(input),
     diagnosePracticeAnswer: (input) => mock.diagnosePracticeAnswer(input),
+    gradeReasoningAnswer: (input) => mock.gradeReasoningAnswer(input),
     ...overrides,
   };
   return { provider, seen };

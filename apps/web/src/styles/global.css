@@ -269,6 +269,22 @@
     @apply bg-warning-soft text-warning-ink;
   }
 
+  .badge-verdict-corect {
+    @apply bg-success-soft text-success-ink;
+  }
+
+  .badge-verdict-partial {
+    @apply bg-warning-soft text-warning-ink;
+  }
+
+  .badge-verdict-gresit {
+    @apply bg-danger-soft text-danger-ink;
+  }
+
+  .student-answer {
+    @apply border-l-4 pl-3;
+  }
+
   .badge-mock {
     @apply bg-warning-soft text-warning-ink;
   }

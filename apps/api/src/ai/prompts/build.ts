@@ -22,6 +22,11 @@ const QUESTION_RULES = [
   'type "programming": give "referenceSolution" (code) and "rubric" (how to grade it).',
 ].join("\n");
 
+const REASONING_RULE =
+  'type "reasoning": an open question where the student explains, compares or justifies in a few sentences, graded by an AI against your reference. Give "referenceSolution": the FULL correct answer written as plain prose (3-6 complete sentences, not a list of criteria). Use it only for objectives about explaining, comparing or justifying, never for a single fact or a value to compute.';
+const NO_REASONING_RULE =
+  'Use only the types "mcq", "short" and "programming": never "reasoning" (it needs a grader that is not available here).';
+
 /**
  * Teacher text is placed between <source>, <style_notes> and <sample> tags and treated as data.
  * A literal copy of one of those tags inside the text could close the block early and make the
@@ -30,7 +35,7 @@ const QUESTION_RULES = [
  */
 export function neutralizeDelimiters(text: string): string {
   return text.replace(
-    /<(\/?)(source|style_notes|sample|topic_goal|history|message|question)(?=[\s>/]|$)/gi,
+    /<(\/?)(source|style_notes|sample|topic_goal|history|message|question|answer|exercise|reference)(?=[\s>/]|$)/gi,
     "&lt;$1$2",
   );
 }
@@ -124,6 +129,7 @@ export function buildLessonPrompt(input: LessonInput): Prompt {
     '{"lesson":{"body":"<markdown>","examples":[{"title":"...","body":"..."}],"checkQuestions":[<question>, ...]}}',
     "Write 3-5 check questions in checkQuestions.",
     QUESTION_RULES,
+    NO_REASONING_RULE,
   ].join("\n\n");
   return {
     system: systemPrompt({
@@ -143,12 +149,21 @@ const KIND_GUIDANCE: Record<NonNullable<QuizInput["kind"]>, string> = {
 };
 
 export function buildQuizPrompt(input: QuizInput): Prompt {
+  // Reasoning questions are graded against a stored reference answer, which only class tests
+  // have today; personal quizzes and the other kinds never use them.
+  const withReasoning = input.mode !== "personal" && (input.kind ?? "test") === "test";
   const user = [
     ...contextLines(input),
     `TASK: write exactly ${input.count} question(s) covering the objectives. ${KIND_GUIDANCE[input.kind ?? "test"]}`,
+    ...(withReasoning
+      ? [
+          'If the test has 4 or more questions and an objective is about explaining, comparing or justifying, include exactly one "reasoning" question for it (at most one per three questions).',
+        ]
+      : []),
     "Output shape:",
     '{"questions":[<question>, ...]}',
     QUESTION_RULES,
+    withReasoning ? REASONING_RULE : NO_REASONING_RULE,
   ].join("\n\n");
   return {
     system: systemPrompt({

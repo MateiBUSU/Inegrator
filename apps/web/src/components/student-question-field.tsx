@@ -70,6 +70,23 @@ export function StudentQuestionField({
         </div>
       ) : null}
 
+      {question.type === "reasoning" ? (
+        <div className="field">
+          <label htmlFor={inputId}>Răspunsul tău</label>
+          <textarea
+            id={inputId}
+            rows={6}
+            placeholder="Explică în câteva propoziții, cu cuvintele tale..."
+            value={draft.text}
+            disabled={disabled}
+            onChange={(event) => onChange({ ...draft, text: event.target.value })}
+          />
+          <small className="field-hint">
+            Răspunsul tău este evaluat de AI prin comparație cu un răspuns de referință.
+          </small>
+        </div>
+      ) : null}
+
       {question.type === "programming" ? (
         <div className="field">
           <label htmlFor={inputId}>Codul tău</label>

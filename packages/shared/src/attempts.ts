@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { safeText } from "./safe-text";
 import { idSchema, questionTypeSchema, studentMaterialViewSchema } from "./materials";
+import { reasoningVerdictValueSchema } from "./reasoning";
 
 export const progressStatusSchema = z.enum(["started", "completed"]);
 export type ProgressStatus = z.infer<typeof progressStatusSchema>;
@@ -9,7 +10,7 @@ export type ProgressStatus = z.infer<typeof progressStatusSchema>;
 // Requests
 // ---------------------------------------------------------------------------
 
-// One entry per question: mcq sends optionIds, short and programming send text.
+// One entry per question: mcq sends optionIds; short, programming and reasoning send text.
 export const submittedAnswerSchema = z.object({
   questionId: idSchema,
   optionIds: z.array(idSchema).max(10).optional(),
@@ -64,6 +65,18 @@ export const questionResultSchema = z.discriminatedUnion("type", [
     referenceSolution: z.string(),
     rubric: z.string().optional(),
   }),
+  z.object({
+    ...questionResultBase,
+    type: z.literal("reasoning"),
+    /** The student's own text. The reference answer is never part of this payload. */
+    text: z.string(),
+    verdict: reasoningVerdictValueSchema,
+    /** 1, 0.5 or 0. */
+    points: z.number(),
+    feedback: z.string(),
+    /** A fresh explanation of the concept, present unless the verdict is CORECT. */
+    reexplanation: z.string().optional(),
+  }),
 ]);
 export type QuestionResult = z.infer<typeof questionResultSchema>;
 
@@ -71,7 +84,8 @@ export const attemptResultSchema = z.object({
   id: z.uuid(),
   materialId: z.uuid(),
   submittedAt: z.string(),
-  score: z.number().int().min(0),
+  /** Whole points, plus 0.5 for each PARTIAL reasoning answer. */
+  score: z.number().min(0),
   maxScore: z.number().int().min(0),
   /** Programming questions, left out of score and maxScore. */
   selfEvaluationCount: z.number().int().min(0),

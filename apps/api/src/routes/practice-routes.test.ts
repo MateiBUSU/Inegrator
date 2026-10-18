@@ -250,6 +250,7 @@ function counting(overrides: Partial<ContentGenerator> = {}) {
       calls.diagnosis++;
       return mock.diagnosePracticeAnswer(input);
     },
+    gradeReasoningAnswer: (input) => mock.gradeReasoningAnswer(input),
     ...overrides,
   };
   return { provider, calls };
