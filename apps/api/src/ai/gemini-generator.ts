@@ -28,7 +28,7 @@ import {
 // `ai.models.generateContent({ model, contents, config })` with systemInstruction,
 // responseMimeType, abortSignal and httpOptions.timeout (checked against the installed v2 types).
 
-export const GEMINI_TIMEOUT_MS = 15_000;
+export const GEMINI_TIMEOUT_MS = 90_000;
 
 export class GeminiGenerator implements ContentGenerator {
   readonly provider = "gemini" as const;
