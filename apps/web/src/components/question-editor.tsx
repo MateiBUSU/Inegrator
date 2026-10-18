@@ -144,6 +144,23 @@ export function QuestionEditor({
         </div>
       ) : null}
 
+      {question.type === "reasoning" ? (
+        <div className="field">
+          <label htmlFor={fieldId("reference")}>
+            Răspuns de referință (folosit de AI la evaluare; elevii nu îl văd)
+          </label>
+          <textarea
+            id={fieldId("reference")}
+            rows={5}
+            readOnly
+            value={question.referenceSolution ?? ""}
+          />
+          <small className="field-hint">
+            Verifică-l: AI-ul compară răspunsurile elevilor cu acest text. Nu poate fi editat încă.
+          </small>
+        </div>
+      ) : null}
+
       {question.type === "programming" ? (
         <>
           <div className="field">

@@ -54,7 +54,7 @@ export function AssignPanel({ materialId }: { materialId: string }) {
           <fieldset>
             <legend>Clase</legend>
             {classes.map((cls) => (
-              <label key={cls.id} className="inline-block">
+              <label key={cls.id} className="block">
                 <input
                   type="checkbox"
                   checked={selected.includes(cls.id)}
